@@ -5,5 +5,5 @@ class MapController:
     def get_map(self, player_token):
         pass
 
-    def change_state(self, state_change):
+    def change_state(self, state_change, player_token):
         pass
