@@ -13,3 +13,6 @@ class PlayerMove:
 
 class MoveType(enum.Enum):
     LEFT = enum.auto()
+    RIGHT = enum.auto()
+    UP = enum.auto()
+    DOWN = enum.auto()
