@@ -1,11 +1,14 @@
 import random
-from shared.map import *
-#from .shared.map import *
+
+from shared.common import CellType, Map
+
+# from .shared.map import *
 
 MIN_WIDTH = 4
 MIN_HEIGHT = 4
 MAX_WIDTH = 8
 MAX_HEIGHT = 8
+
 
 class Room:
     def __init__(self, cornerx, cornery, width, height):
@@ -14,8 +17,10 @@ class Room:
         self.width = width
         self.height = height
         self.neighbours = []
+
     def getRightBorder(self):
         return self.cornerx + self.width + 1
+
     def getBottomBorder(self):
         return self.cornery + self.height + 1
 
@@ -27,6 +32,7 @@ def generateMap(config):
     result = Map(field, graph.cornerx + graph.width // 2, graph.cornery + graph.height // 2)
     return result
 
+
 def printRoomsGraph(root, field):
     if (root == None):
         return field
@@ -34,6 +40,7 @@ def printRoomsGraph(root, field):
     for r in root.neighbours:
         field = printRoomsGraph(r, field)
     return field
+
 
 def generateRoomsGraph(width, height, addx=0, addy=0):
     if (width <= MIN_WIDTH or height <= MIN_HEIGHT):
@@ -46,11 +53,14 @@ def generateRoomsGraph(width, height, addx=0, addy=0):
     room.cornerx += addx
     room.cornery += addy
     left = generateRoomsGraph(room_x - 1, room_y + room_height - 1, addx, addy)
-    right = generateRoomsGraph(width - room_width - room_x - 1, height - room_y - 1, addx + room_x + room_width, addy + room_y)
+    right = generateRoomsGraph(width - room_width - room_x - 1, height - room_y - 1, addx + room_x + room_width,
+                               addy + room_y)
     up = generateRoomsGraph(width - room_x - 1, room_y - 1, addx + room_x, addy)
-    down = generateRoomsGraph(room_x + room_width - 1, height - room_y - room_height - 1, addx, addy + room_y + room_height)
+    down = generateRoomsGraph(room_x + room_width - 1, height - room_y - room_height - 1, addx,
+                              addy + room_y + room_height)
     room.neighbours = [left, right, up, down]
     return room
+
 
 def drawSingleRoom(field, room):
     for j in range(room.height + 1):
@@ -64,9 +74,9 @@ def drawSingleRoom(field, room):
             field[room.cornery + j][room.cornerx + i] = CellType.ROOM_SPACE
     return field
 
+
 def printField(field):
     for line in field:
         for it in line:
             print(it.value, end="")
         print()
-
