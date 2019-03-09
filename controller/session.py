@@ -1,17 +1,16 @@
 import collections
 
-from shared.common import CellType, Map, Coordinate
+from shared.common import CellType, Coordinate
 from shared.player_map import MoveType
 
 
 class Session:
-    def __init__(self, player_tokens, map_settings):
+    def __init__(self, players, game_map):
         self.players = {}
 
-        # TODO: call map generator
-        self.map = Map(5, 5, [[CellType.ROOM_SPACE] * 5] * 5)
-        for player in player_tokens:
-            self.players[player] = PlayerState(self.map)
+        self.map = game_map
+        for player in players:
+            self.players[player.token] = PlayerState(self.map, player)
 
     def change_player_state(self, player_token, state_change):
         self.players[player_token].change_state(state_change)
