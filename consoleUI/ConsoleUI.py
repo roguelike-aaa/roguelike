@@ -28,7 +28,7 @@ class ConsoleUI:
 
     def _draw(self, console):
         while not tcod.console_is_window_closed():
-            map_ = MapController.get_map()
+            map_ = MapController.get_player_map()
             self._draw_map(map_.map_array, console)
             self._draw_hero(map_.pos_x, map_.pos_y, console)
             tcod.console_flush()

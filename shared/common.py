@@ -2,7 +2,7 @@ import enum
 
 
 class Map:
-    def __init__(self, width, height, map_array):
+    def __init__(self, height, width, map_array):
         self.width = width
         self.height = height
         self.map_array = map_array
@@ -18,6 +18,9 @@ class Coordinate:
 
     def __add__(self, other):
         return Coordinate(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
 
 
 class CellType(enum.Enum):

@@ -12,8 +12,8 @@ class PlayerMap:
 
 
 class Player:
-    def __init__(self, x, y, player_token):
-        self.coordinate = Coordinate(x, y)
+    def __init__(self, coordinate, player_token):
+        self.coordinate = coordinate
         self.token = player_token
 
 

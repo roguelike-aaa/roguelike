@@ -21,7 +21,7 @@ class Session:
             result_map.append([])
             for j in range(self.map.width):
                 result_map[-1].append(
-                    (self.map.get_cell(i, j) if mask[i][j] or mask is None else CellType.EMPTY_SPACE).value)
+                    (self.map.get_cell(i, j) if mask is None or mask[i][j] else CellType.EMPTY_SPACE).value)
         return result_map
 
     def dump_players_map(self, players_token):
@@ -42,12 +42,12 @@ class PlayerState:
 
     def change_state(self, state_change):
         new_coordinate = self.coordinate + {
-            MoveType.DOWN:  (1,  0),
-            MoveType.UP:    (-1, 0),
-            MoveType.RIGHT: (0,  1),
-            MoveType.LEFT:  (0, -1),
+            MoveType.DOWN:  Coordinate(1,  0),
+            MoveType.UP:    Coordinate(-1, 0),
+            MoveType.RIGHT: Coordinate(0,  1),
+            MoveType.LEFT:  Coordinate(0, -1),
         }[state_change.player_move.move_type]
-        if self.map.get_cell(new_coordinate) in [CellType.DOOR, CellType.ROOM_SPACE, CellType.PATH]:
+        if self.map.get_cell(new_coordinate.x, new_coordinate.y) in [CellType.DOOR, CellType.ROOM_SPACE, CellType.PATH]:
             self.coordinate = new_coordinate
             self.update_visible_area()
 
@@ -59,8 +59,6 @@ class PlayerState:
                   Coordinate(0, -1),
                   Coordinate(1, 0),
                   Coordinate(-1, 0)]
-
-        queue.append(self.coordinate)
         while queue:
             coordinate = queue.pop()
             for delta in deltas:
@@ -69,6 +67,6 @@ class PlayerState:
 
                 if new_cell in [CellType.ERROR, CellType.EMPTY_SPACE]:
                     continue
-                self.mask[new_coordinate.x][new_coordinate.y] = 1
-                if new_cell is CellType.ROOM_SPACE:
+                if new_cell is CellType.ROOM_SPACE and self.mask[new_coordinate.x][new_coordinate.y] == 0:
                     queue.appendleft(new_coordinate)
+                self.mask[new_coordinate.x][new_coordinate.y] = 1
