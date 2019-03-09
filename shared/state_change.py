@@ -3,7 +3,7 @@ import enum
 
 class StateChange:
     def __init__(self, player_move):
-        self.player_mode = player_move
+        self.player_move = player_move
 
 
 class PlayerMove:
