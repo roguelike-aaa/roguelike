@@ -1,12 +1,6 @@
 import enum
 
 
-class MapConfig:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-
-
 class Map:
     def __init__(self, width, height, map_array):
         self.width = width
@@ -15,6 +9,15 @@ class Map:
 
     def get_cell(self, height, width):
         return self.map_array[height][width] if 0 <= height < self.height and 0 <= width < self.width else CellType.ERROR
+
+
+class Coordinate:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __add__(self, other):
+        return Coordinate(self.x + other.x, self.y + other.y)
 
 
 class CellType(enum.Enum):

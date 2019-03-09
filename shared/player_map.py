@@ -1,3 +1,10 @@
+import enum
+
+from shared.common import Coordinate
+
+
+# Player state request
+
 class PlayerMap:
     def __init__(self, player_map, player):
         self.map = player_map
@@ -21,10 +28,20 @@ class PlayerToken:
         return self.name.__hash__()
 
 
-class Coordinate:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+# Change player state requests
 
-    def __add__(self, other):
-        return Coordinate(self.x + other.x, self.y + other.y)
+class StateChange:
+    def __init__(self, player_move):
+        self.player_move = player_move
+
+
+class PlayerMove:
+    def __init__(self, move_type):
+        self.move_type = move_type
+
+
+class MoveType(enum.Enum):
+    LEFT = enum.auto()
+    RIGHT = enum.auto()
+    UP = enum.auto()
+    DOWN = enum.auto()

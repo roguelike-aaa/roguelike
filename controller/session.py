@@ -1,8 +1,7 @@
 import collections
 
-from shared.map import *
-from shared.player_map import *
-from shared.state_change import MoveType
+from shared.common import CellType, Map, Coordinate
+from shared.player_map import MoveType
 
 
 class Session:
