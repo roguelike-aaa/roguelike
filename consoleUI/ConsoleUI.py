@@ -14,7 +14,7 @@ class ConsoleUI:
         screen_width = len(map.map) + 10
         screen_height = len(map.map[0]) + 10
         tcod.console_set_custom_font('arial12x12.png', tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD)
-        console = tcod.console_init_root(screen_width, screen_height, 'roguelike aaa', False)
+        console = tcod.console_init_root(screen_width, screen_height, 'Roguelike AAA', False)
         tcod.sys_set_fps(5)
         tcod.console_set_default_foreground(console, tcod.white)
         self._draw(console)
@@ -31,11 +31,11 @@ class ConsoleUI:
         while not tcod.console_is_window_closed():
             map_ = MapController().get_player_map(self.player_token)
             self._draw_map(map_.map, console)
-            self._draw_hero(map_.player.token.x, map_.player.token.y, console)
+            self._draw_hero(map_.player.coordinate.x, map_.player.coordinate.y, console)
             tcod.console_flush()
             key = tcod.console_check_for_keypress()
             action = self._handle_keys(key)
-            if action:
+            if action is not None:
                 MapController().change_state(StateChange(PlayerMove(action)), self.player_token)
 
     def _handle_keys(self, key):
@@ -47,6 +47,8 @@ class ConsoleUI:
             return MoveType.LEFT
         elif key.vk == tcod.KEY_RIGHT:
             return MoveType.RIGHT
+        else:
+            return None
 
 if __name__ == '__main__':
     ui = ConsoleUI(PlayerToken("pupa"))
