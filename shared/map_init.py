@@ -12,7 +12,7 @@ class MapConfig:
         Map meta information.
     """
 
-    def __init__(self, width, height):
+    def __init__(self, height, width):
         """
         :param width: map width
         :param height: map height
