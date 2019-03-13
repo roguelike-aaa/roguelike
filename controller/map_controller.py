@@ -6,6 +6,10 @@ from shared.player_map import Player, PlayerMap, PlayerToken, GameSettings
 
 
 class MapController:
+
+    def __init__(self, player_token, game_settings: GameSettings):
+        self.start_new_game(player_token, game_settings)
+
     def __init__(self):
         """
             Sample map:
