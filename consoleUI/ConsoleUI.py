@@ -23,7 +23,7 @@ class ConsoleUI:
     def _draw_map(self, map_array, console):
         for i in range(len(map_array)):
             for j in range(len(map_array[i])):
-                tcod.console_put_char(console, i, j, map_array[i][j], tcod.BKGND_NONE)
+                tcod.console_put_char(console, j, i, map_array[j][i], tcod.BKGND_NONE)
 
     def _draw_hero(self, pos_x, pos_y, console):
         tcod.console_put_char(console, pos_x, pos_y, CellType.HERO.value, tcod.BKGND_NONE)
@@ -50,7 +50,3 @@ class ConsoleUI:
             return MoveType.RIGHT
         else:
             return None
-
-if __name__ == '__main__':
-    ui = ConsoleUI(PlayerToken("pupa"), MapController())
-    ui.start()
