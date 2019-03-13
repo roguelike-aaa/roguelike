@@ -1,7 +1,7 @@
 import random
 
 from shared.common import CellType, Map, Coordinate
-
+from shared.map_init import GeneratedMap, PlayerInitState
 # from .shared.map import *
 
 MIN_WIDTH = 4
@@ -30,9 +30,9 @@ def generate_map(config):
     graph = generate_rooms_graph(config.width - 1, config.height - 1)
     field = print_rooms_graph(graph, field)
     field = draw_paths(graph, field)
-    person = Coordinate(graph.cornerx + graph.width // 2, graph.cornery + graph.height // 2)
+    person = PlayerInitState(Coordinate(graph.cornerx + graph.width // 2, graph.cornery + graph.height // 2))
     result = Map(config.height, config.width, field)
-    return result, person
+    return GeneratedMap(result, person)
 
 def draw_paths(graph, field):
     for child in graph.neighbours:
