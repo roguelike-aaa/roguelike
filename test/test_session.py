@@ -8,7 +8,7 @@ from shared.player_map import Player, PlayerToken, MoveType, PlayerMove, StateCh
 class TestSession(unittest.TestCase):
     def setUp(self):
         self.player_token = PlayerToken("pupa")
-        self.session = Session([Player(Coordinate(1, 2), "pupa")], Map(3, 5, [
+        self.session = Session([Player(Coordinate(1, 2), self.player_token)], Map(3, 5, [
             [CellType.EMPTY_SPACE, CellType.EMPTY_SPACE, CellType.HORIZONTAL_WALL, CellType.HORIZONTAL_WALL,
              CellType.EMPTY_SPACE],
             [CellType.PATH, CellType.DOOR, CellType.ROOM_SPACE, CellType.ROOM_SPACE, CellType.VERTICAL_WALL],
@@ -17,7 +17,7 @@ class TestSession(unittest.TestCase):
         ]))
 
     def test_create_session(self):
-        Session([Player(Coordinate(0, 0), "pupa")], Map(1, 1, [[CellType.ROOM_SPACE]]))
+        Session([Player(Coordinate(0, 0), self.player_token)], Map(1, 1, [[CellType.ROOM_SPACE]]))
 
     def test_dump_player_map(self):
         self.assertEqual([
@@ -62,3 +62,42 @@ class TestSession(unittest.TestCase):
             '  -- ',
             '#*..|',
             '# -- '], list(map(lambda x: "".join(x), self.session.dump_players_map(self.player_token))))
+
+    def test_player_spawns_on_door(self):
+        self.session = Session([Player(Coordinate(1, 1), "pupa")], Map(3, 5, [
+            [CellType.EMPTY_SPACE, CellType.EMPTY_SPACE, CellType.HORIZONTAL_WALL, CellType.HORIZONTAL_WALL,
+             CellType.EMPTY_SPACE],
+            [CellType.PATH, CellType.DOOR, CellType.ROOM_SPACE, CellType.ROOM_SPACE, CellType.VERTICAL_WALL],
+            [CellType.PATH, CellType.EMPTY_SPACE, CellType.HORIZONTAL_WALL, CellType.HORIZONTAL_WALL,
+             CellType.EMPTY_SPACE]
+        ]))
+        self.assertEqual([
+            '  -- ',
+            '#*..|',
+            '  -- '], list(map(lambda x: "".join(x), self.session.dump_players_map(self.player_token))))
+
+    def test_player_spawns_on_path(self):
+        self.session = Session([Player(Coordinate(2, 0), self.player_token)], Map(3, 5, [
+            [CellType.EMPTY_SPACE, CellType.EMPTY_SPACE, CellType.HORIZONTAL_WALL, CellType.HORIZONTAL_WALL,
+             CellType.EMPTY_SPACE],
+            [CellType.PATH, CellType.DOOR, CellType.ROOM_SPACE, CellType.ROOM_SPACE, CellType.VERTICAL_WALL],
+            [CellType.PATH, CellType.EMPTY_SPACE, CellType.HORIZONTAL_WALL, CellType.HORIZONTAL_WALL,
+             CellType.EMPTY_SPACE]
+        ]))
+        self.assertEqual([
+            '     ',
+            '#    ',
+            '#    '], list(map(lambda x: "".join(x), self.session.dump_players_map(self.player_token))))
+
+    def test_player_spawns_on_path_near_door(self):
+        self.session = Session([Player(Coordinate(1, 0), self.player_token)], Map(3, 5, [
+            [CellType.EMPTY_SPACE, CellType.EMPTY_SPACE, CellType.HORIZONTAL_WALL, CellType.HORIZONTAL_WALL,
+             CellType.EMPTY_SPACE],
+            [CellType.PATH, CellType.DOOR, CellType.ROOM_SPACE, CellType.ROOM_SPACE, CellType.VERTICAL_WALL],
+            [CellType.PATH, CellType.EMPTY_SPACE, CellType.HORIZONTAL_WALL, CellType.HORIZONTAL_WALL,
+             CellType.EMPTY_SPACE]
+        ]))
+        self.assertEqual([
+            '     ',
+            '#*   ',
+            '#    '], list(map(lambda x: "".join(x), self.session.dump_players_map(self.player_token))))
