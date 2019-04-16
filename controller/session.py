@@ -42,10 +42,10 @@ class PlayerState:
 
     def change_state(self, state_change):
         new_coordinate = self.coordinate + {
-            MoveType.DOWN:  Coordinate(0,  1),
-            MoveType.UP:    Coordinate(0, -1),
-            MoveType.RIGHT: Coordinate(1,  0),
-            MoveType.LEFT:  Coordinate(-1, 0),
+            MoveType.DOWN:  Coordinate(1,  0),
+            MoveType.UP:    Coordinate(-1, 0),
+            MoveType.RIGHT: Coordinate(0,  1),
+            MoveType.LEFT:  Coordinate(0, -1),
         }[state_change.player_move.move_type]
         if self.map.get_cell(new_coordinate.x, new_coordinate.y) in [CellType.DOOR, CellType.ROOM_SPACE, CellType.PATH]:
             self.coordinate = new_coordinate

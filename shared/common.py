@@ -59,8 +59,8 @@ class CellType(enum.Enum):
     """
     EMPTY_SPACE = ' '
     ROOM_SPACE = '.'
-    VERTICAL_WALL = '-'
-    HORIZONTAL_WALL = '|'
+    VERTICAL_WALL = '|'
+    HORIZONTAL_WALL = '-'
     DOOR = '*'
     PATH = '#'
     HERO = '@'
