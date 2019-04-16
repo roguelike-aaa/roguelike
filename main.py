@@ -1,6 +1,6 @@
 import argparse
 
-#from consoleUI.ConsoleUI import ConsoleUI
+from consoleUI.ConsoleUI import ConsoleUI
 from controller.map_controller import MapController
 from shared.player_map import PlayerToken, GameSettings
 
@@ -13,16 +13,13 @@ def main():
 
     args = parser.parse_args()
     controller = MapController(PlayerToken(args.token), GameSettings(args.height, args.width))
-    # ui = ConsoleUI(PlayerToken(args.token))
+    ui = ConsoleUI(PlayerToken(args.token), controller)
+    for line in controller.get_player_map(PlayerToken(args.token)).map:
+        for c in line:
+            print(c, end='')
+        print()
 
-
-
-#    for line in controller.get_player_map(PlayerToken(args.token)).map:
-#        for c in line:
-#            print(c, end='')
-#        print()
-
-    # ui.start(controller)
+    ui.start()
 
 
 if __name__ == "__main__":
