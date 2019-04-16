@@ -29,18 +29,26 @@ class PlayerToken:
         return self.name.__hash__()
 
 
+class PlayerFightStats:
+    def __init__(self, current_health, max_health, strength):
+        self.current_health = current_health
+        self.max_health = max_health
+        self.strength = strength
+
+
 class Player:
     """
         Class storing player position on the map.
     """
 
-    def __init__(self, coordinate: Coordinate, player_token: PlayerToken):
+    def __init__(self, coordinate: Coordinate, player_token: PlayerToken, player_fight_stats: PlayerFightStats):
         """
         :param coordinate: position on the map.
         :param player_token: player identifier.
         """
         self.coordinate = coordinate
         self.token = player_token
+        self.player_fight_stats = player_fight_stats
 
 
 class PlayerMap:
