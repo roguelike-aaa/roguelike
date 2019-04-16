@@ -1,6 +1,5 @@
 from tcod import tcod
 
-from controller.map_controller import MapController
 from shared.common import CellType
 from shared.player_map import MoveType, StateChange, PlayerMove, PlayerToken
 
@@ -23,10 +22,10 @@ class ConsoleUI:
     def _draw_map(self, map_array, console):
         for i in range(len(map_array)):
             for j in range(len(map_array[i])):
-                tcod.console_put_char(console, j, i, map_array[j][i], tcod.BKGND_NONE)
+                tcod.console_put_char(console, j, i, map_array[i][j], tcod.BKGND_NONE)
 
     def _draw_hero(self, pos_x, pos_y, console):
-        tcod.console_put_char(console, pos_x, pos_y, CellType.HERO.value, tcod.BKGND_NONE)
+        tcod.console_put_char(console, pos_y, pos_x, CellType.HERO.value, tcod.BKGND_NONE)
 
     def _draw(self, console):
         while not tcod.console_is_window_closed():
