@@ -56,11 +56,12 @@ class PlayerMap:
         Class storing a full player knowledge about the game.
     """
 
-    def __init__(self, player_map, player: Player):
+    def __init__(self, player_map, player: Player, status_message: str):
         """
         :param player_map: 2-dimensional array of characters describing the map layout visible to player.
         :param player: player class defining hero state on the map.
         """
+        self.status_message = status_message
         self.map = player_map
         self.player = player
 
