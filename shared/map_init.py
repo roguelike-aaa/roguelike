@@ -27,13 +27,14 @@ class GeneratedMap:
         Class storing the map layout and players states on the map.
     """
 
-    def __init__(self, game_map, player_init_states):
+    def __init__(self, game_map, player_init_states, mobs):
         """
         :param game_map: 2-dimensional array of CellType elements of height x width size.
         :param player_init_states: player state at the beginning of the game.
         """
         self.map = game_map
         self.player_init_states = player_init_states
+        self.mobs = mobs
 
 
 class PlayerInitState:
