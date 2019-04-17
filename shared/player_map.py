@@ -29,7 +29,7 @@ class PlayerToken:
         return self.name.__hash__()
 
 
-class PlayerFightStats:
+class CurrentFightStats:
     def __init__(self, current_health, max_health, strength):
         self.current_health = current_health
         self.max_health = max_health
@@ -41,14 +41,14 @@ class Player:
         Class storing player position on the map.
     """
 
-    def __init__(self, coordinate: Coordinate, player_token: PlayerToken, player_fight_stats: PlayerFightStats):
+    def __init__(self, coordinate: Coordinate, player_token: PlayerToken, fight_stats: CurrentFightStats):
         """
         :param coordinate: position on the map.
         :param player_token: player identifier.
         """
         self.coordinate = coordinate
         self.token = player_token
-        self.player_fight_stats = player_fight_stats
+        self.fight_stats = fight_stats
 
 
 class PlayerMap:
@@ -77,6 +77,7 @@ class MoveType(enum.Enum):
     RIGHT = enum.auto()
     UP = enum.auto()
     DOWN = enum.auto()
+    NO = enum.auto()
 
 
 class PlayerMove:
