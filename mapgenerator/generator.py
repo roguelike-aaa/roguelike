@@ -1,13 +1,16 @@
 import random
 
 from shared.common import CellType, Map, Coordinate
-from shared.map_init import GeneratedMap, PlayerInitState
+from shared.map_init import GeneratedMap, PlayerInitState, FightStats, MobInitState, ModMode
 # from .shared.map import *
 
 MIN_WIDTH = 4
 MIN_HEIGHT = 4
 MAX_WIDTH = 8
 MAX_HEIGHT = 8
+
+MAX_HEALTH = 100
+MAX_STRENGTH = 20
 
 
 class Room:
@@ -30,9 +33,24 @@ def generate_map(config):
     graph = generate_rooms_graph(config.width - 1, config.height - 1)
     field = print_rooms_graph(graph, field)
     field = draw_paths(graph, field)
-    person = PlayerInitState(Coordinate(graph.cornerx + graph.width // 2, graph.cornery + graph.height // 2))
+    person = PlayerInitState(Coordinate(graph.cornerx + graph.width // 2, graph.cornery + graph.height // 2), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)))
+    field, mobs = generate_mobs(field)
     result = Map(config.height, config.width, field)
-    return GeneratedMap(result, person)
+    return GeneratedMap(result, [person] + mobs)
+
+def generate_mobs(field):
+    mobs = [0] * random.randint(3, 6)
+    for i in range(len(mobs)):
+        while True:
+            x = random.randint(0, len(field[0]) - 1)
+            y = random.randint(0, len(field) - 1)
+            if field[y][x] != CellType.ROOM_SPACE:
+                continue
+            field[y][x] = CellType.MOB
+            mobs[i] = MobInitState(Coordinate(x, y), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)), random.choice(list(ModMode)))
+            break
+    return field, mobs
+        
 
 def draw_paths(graph, field):
     for child in graph.neighbours:
