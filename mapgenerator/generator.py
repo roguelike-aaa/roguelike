@@ -36,7 +36,7 @@ def generate_map(config):
     person = PlayerInitState(Coordinate(graph.cornerx + graph.width // 2, graph.cornery + graph.height // 2), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)))
     field, mobs = generate_mobs(field)
     result = Map(config.height, config.width, field)
-    return GeneratedMap(result, [person] + mobs)
+    return GeneratedMap(result, person, mobs)
 
 def generate_mobs(field):
     mobs = [0] * random.randint(3, 6)
