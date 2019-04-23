@@ -33,7 +33,7 @@ def generate_map(config):
     graph = generate_rooms_graph(config.width - 1, config.height - 1)
     field = print_rooms_graph(graph, field)
     field = draw_paths(graph, field)
-    person = PlayerInitState(Coordinate(graph.cornerx + graph.width // 2, graph.cornery + graph.height // 2), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)))
+    person = PlayerInitState(Coordinate(graph.cornery + graph.height // 2, graph.cornerx + graph.width // 2), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)))
     field, mobs = generate_mobs(field)
     result = Map(config.height, config.width, field)
     return GeneratedMap(result, person, mobs)
@@ -47,7 +47,7 @@ def generate_mobs(field):
             if field[y][x] != CellType.ROOM_SPACE:
                 continue
             field[y][x] = CellType.MOB
-            mobs[i] = MobInitState(Coordinate(x, y), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)), random.choice(list(ModMode)))
+            mobs[i] = MobInitState(Coordinate(y, x), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)), random.choice(list(ModMode)))
             break
     return field, mobs
         
