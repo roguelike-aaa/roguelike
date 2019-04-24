@@ -24,7 +24,7 @@ class Session:
     def change_player_state(self, player_token, state_change):
         player = self.game_content.players_by_token[player_token]
         player.change_state(state_change)
-        for mob in self.game_content.mobs:
+        for mob in self.game_content.mobs.values():
             mob.act()
 
     def dump_map(self, mask=None):
@@ -37,7 +37,8 @@ class Session:
                      if mask is None or mask[i][j]
                      else CellType.EMPTY_SPACE).value)
         for mob in self.game_content.mobs.values():
-            result_map[mob.data.coordinate.x][mob.data.coordinate.y] = CellType.MOB.value
+            if mask is None or mask[mob.data.coordinate.x][mob.data.coordinate.y]:
+                result_map[mob.data.coordinate.x][mob.data.coordinate.y] = CellType.MOB.value
         return result_map
 
     def dump_players_map(self, players_token):
@@ -77,26 +78,26 @@ class UnitsInteractor:
         unit = None
         if attack.target in self.__game_content.mobs:
             unit = self.__game_content.mobs[attack.target]
-        elif attack.target in self.__game_content.players_by_id[attack.target]:
+        elif attack.target in self.__game_content.players_by_id:
             unit = self.__game_content.players_by_id[attack.target]
         assert unit is not None
-        unit.get_attacked(attack)
-        if unit.data.fight_stats.health <= 0:
-            if unit.unit_type is UnitState.UnitType.MOB:
-                del self.__game_content.mobs[unit.unit_id]
-            elif unit.unit_type is UnitState.UnitType.PLAYER:
+        unit.get_damaged(attack)
+        if unit.data.fight_stats.current_health <= 0:
+            if unit.data.unit_type is UnitState.UnitType.MOB:
+                del self.__game_content.mobs[unit.data.unit_id]
+            elif unit.data.unit_type is UnitState.UnitType.PLAYER:
                 self.__game_content.players_by_id.pop(unit.data.unit_id, None)
                 self.__game_content.players_by_token.pop(unit.token, None)
 
     def get_context(self, unit):
         mask = unit.get_visible_area()
 
-        return MapView([MapView.MobView(mob.coordinate)
-                        for mob in self.__game_content.mobs
-                        if mask[mob.coordinate.x][mob.coordinate.y]],
-                       [MapView.PlayerView(player.coordinate)
-                        for player in self.__game_content.players_by_id
-                        if mask[player.coordinate.x][player.coordinate.y]]
+        return MapView([MapView.MobView(mob.data.unit_id, mob.data.coordinate)
+                        for mob in self.__game_content.mobs.values()
+                        if mask[mob.data.coordinate.x][mob.data.coordinate.y]],
+                       [MapView.PlayerView(player.data.unit_id, player.data.coordinate)
+                        for player in self.__game_content.players_by_id.values()
+                        if mask[player.data.coordinate.x][player.data.coordinate.y]]
                        )
 
 
@@ -130,12 +131,16 @@ class UnitState:
         new_coordinate = self.data.coordinate + UnitState.move_deltas[state_change.player_move.move_type]
         if self.data.map.get_cell(new_coordinate.x, new_coordinate.y) \
                 in [CellType.DOOR, CellType.ROOM_SPACE, CellType.PATH]:
+            context = self.game_interactor.get_context(self)
+            for unit_view in context.player_views + context.mob_views:
+                if new_coordinate == unit_view.coordinate:
+                    self.game_interactor.attack(self, UnitState.UnitAttack(unit_view.unit_id, self.data.fight_stats.strength))
+                    return
             self.data.coordinate = new_coordinate
 
     def get_visible_area(self):
         queue = collections.deque([self.data.coordinate])
         mask = [[0 for _ in range(self.data.map.width)] for _ in range(self.data.map.height)]
-        print(self.data.coordinate.x, self.data.coordinate.y)
         mask[self.data.coordinate.x][self.data.coordinate.y] = 1
 
         deltas = [Coordinate(0, 1),
@@ -204,7 +209,8 @@ class MobState(UnitState):
 
 class MapView:
     class UnitView:
-        def __init__(self, coordinate: Coordinate):
+        def __init__(self, unit_id, coordinate: Coordinate):
+            self.unit_id = unit_id
             self.coordinate = coordinate
 
     class MobView(UnitView):
@@ -214,8 +220,8 @@ class MapView:
         pass
 
     def __init__(self, mobs, players):
-        self.mob_views = [MapView.MobView(mob.coordinate) for mob in mobs]
-        self.player_views = [MapView.PlayerView(player.coordinate) for player in players]
+        self.mob_views = mobs
+        self.player_views = players
 
 
 class MobStrategy:
@@ -226,11 +232,12 @@ class MobStrategy:
 
         for delta in mob.move_deltas:
             weight = cls.action_weight(player_map.StateChange(player_map.PlayerMove(delta)), mob, context)
-            if direction is None or ((weight is not None) and weight < best_weight):
+            if weight is None:
+                continue
+            if (direction is None) or (weight > best_weight):
                 direction = delta
                 best_weight = weight
-
-        mob.change_state(direction)
+        mob.change_state(player_map.StateChange(player_map.PlayerMove(direction)))
 
     WEIGHT_INFTY = 1000000000
 
@@ -244,11 +251,11 @@ class PlayersDistanceBasedMobStrategy(MobStrategy, ABC):
     def dist_weight(cls, state_change, mob, context):
         if not context.player_views:
             # No players nearby
-            return 0 if state_change.player_move is MoveType.NO else None
+            return 0 if state_change.player_move.move_type is MoveType.NO else None
 
         new_coordinate = mob.data.coordinate + mob.move_deltas[state_change.player_move.move_type]
         cell = mob.data.map.get_cell(new_coordinate.x, new_coordinate.y)
-        if cell not in [CellType.HERO, CellType.PATH, CellType.DOOR, CellType.ROOM_SPACE]:
+        if cell not in [CellType.PATH, CellType.DOOR, CellType.ROOM_SPACE]:
             return None
         return min([abs(player.coordinate.x - new_coordinate.x) + abs(player.coordinate.y - new_coordinate.y) + 1
                     for player in context.player_views])
@@ -258,9 +265,7 @@ class AggressiveStrategy(PlayersDistanceBasedMobStrategy):
     @classmethod
     def action_weight(cls, state_change, mob, context):
         weight = super().dist_weight(state_change, mob, context)
-        if weight:
-            return -(weight if weight != 0 else MobStrategy.WEIGHT_INFTY)
-        return None
+        return -weight if weight is not None else None
 
 
 class PassiveStrategy(MobStrategy):

@@ -1,7 +1,7 @@
 from controller.session import Session
 from mapgenerator.generator import generate_map
 from shared.map_init import MapConfig
-from shared.player_map import Player, PlayerMap, GameSettings, CurrentFightStats
+from shared.player_map import Player, PlayerMap, GameSettings, CurrentFightStats, Mob
 
 
 class MapController:
@@ -18,7 +18,12 @@ class MapController:
                                        player_token, CurrentFightStats(player.fight_stats.health,
                                                                        player.fight_stats.health,
                                                                        player.fight_stats.strength))],
-                               generated_map.map, generated_map.mobs)
+                               generated_map.map, [Mob(mob.coordinate,
+                                                       mob.mob_mode,
+                                                       CurrentFightStats(mob.fight_stats.health,
+                                                                         mob.fight_stats.health,
+                                                                         mob.fight_stats.strength))
+                                                   for mob in generated_map.mobs])
 
     def get_player_map(self, player_token):
         player = self.session.game_content.players_by_token[player_token]

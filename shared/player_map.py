@@ -51,6 +51,13 @@ class Player:
         self.fight_stats = fight_stats
 
 
+class Mob:
+    def __init__(self, coordinate: Coordinate, mob_mode, fight_stats: CurrentFightStats):
+        self.coordinate = coordinate
+        self.mob_mode = mob_mode
+        self.fight_stats = fight_stats
+
+
 class PlayerMap:
     """
         Class storing a full player knowledge about the game.
