@@ -40,13 +40,14 @@ def generate_map(config):
 
 def generate_mobs(field):
     mobs = [0] * random.randint(3, 6)
+    used = set()
     for i in range(len(mobs)):
         while True:
             x = random.randint(0, len(field[0]) - 1)
             y = random.randint(0, len(field) - 1)
-            if field[y][x] != CellType.ROOM_SPACE:
+            if field[y][x] != CellType.ROOM_SPACE or (y, x) in used:
                 continue
-            field[y][x] = CellType.MOB
+            used.add((y, x))
             mobs[i] = MobInitState(Coordinate(y, x), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)), random.choice(list(ModMode)))
             break
     return field, mobs
