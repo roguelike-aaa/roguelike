@@ -31,20 +31,20 @@ class ConsoleUI:
         status = "STATUS:"
         padding = 0
         for s in status:
-            tcod.console_put_char(console, padding, len(map) + 10, s, tcod.BKGND_NONE)
+            tcod.console_put_char(console, padding, len(map.map) + 10, s, tcod.BKGND_NONE)
             padding += 1
         for s in map.status_message:
-            tcod.console_put_char(console, padding, len(map) + 10, s, tcod.BKGND_NONE)
+            tcod.console_put_char(console, padding, len(map.map) + 10, s, tcod.BKGND_NONE)
             padding += 1
 
     def _write_health(self, console, map):
         status = "HEALTH:"
         padding = 0
         for s in status:
-            tcod.console_put_char(console, padding, len(map) + 15, s, tcod.BKGND_NONE)
+            tcod.console_put_char(console, padding, len(map.map) + 12, s, tcod.BKGND_NONE)
             padding += 1
-        for s in str(map.player.player_fight_stats):
-            tcod.console_put_char(console, padding, len(map) + 15, s, tcod.BKGND_NONE)
+        for s in str(map.player.fight_stats.current_health):
+            tcod.console_put_char(console, padding, len(map.map) + 12, s, tcod.BKGND_NONE)
             padding += 1
 
     def _draw(self, console):
