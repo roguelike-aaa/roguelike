@@ -24,8 +24,9 @@ class Session:
     def change_player_state(self, player_token, state_change):
         player = self.game_content.players_by_token[player_token]
         player.change_state(state_change)
-        for mob in self.game_content.mobs.values():
-            mob.act()
+        for mob in list(self.game_content.mobs.values()):
+            if mob.data.fight_stats.current_health > 0:
+                mob.act()
 
     def dump_map(self, mask=None):
         result_map = []
