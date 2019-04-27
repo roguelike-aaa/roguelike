@@ -27,7 +27,7 @@ class GeneratedMap:
         Class storing the map layout and players states on the map.
     """
 
-    def __init__(self, game_map, player_init_states, mobs):
+    def __init__(self, game_map, player_init_states, mobs, clothes):
         """
         :param game_map: 2-dimensional array of CellType elements of height x width size.
         :param player_init_states: player state at the beginning of the game.
@@ -35,6 +35,7 @@ class GeneratedMap:
         self.map = game_map
         self.player_init_states = player_init_states
         self.mobs = mobs
+        self.clothes = clothes
 
 
 class PlayerInitState:
@@ -70,6 +71,16 @@ class MobInitState:
         self.mob_mode = mob_mode
 
 
+class ClothesInitState:
+    """
+        State of the clothes and stuff at the beginning of the game.
+    """
+
+    def __init__(self, coordinate, clothes_stats):
+        self.coordinate = coordinate
+        self.clothes_stats = clothes_stats
+
+
 class FightStats:
     def __init__(self, health, strength):
         """
@@ -78,3 +89,13 @@ class FightStats:
         """
         self.health = health
         self.strength = strength
+
+
+class ClothesStats:
+    def __init__(self, health_add, strength_add):
+        """
+        :param health_add: what will be added to character's health
+        :param strength: what will be added to character's strength
+        """
+        self.health_add = health_add
+        self.strength_add = strength_add
