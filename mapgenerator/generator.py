@@ -1,7 +1,7 @@
 import random
 
 from shared.common import CellType, Map, Coordinate
-from shared.map_init import GeneratedMap, PlayerInitState, FightStats, MobInitState, ModMode
+from shared.map_init import GeneratedMap, PlayerInitState, FightStats, MobInitState, ModMode, ClothesInitState, ClothesStats
 # from .shared.map import *
 
 MIN_WIDTH = 4
@@ -34,13 +34,15 @@ def generate_map(config):
     field = print_rooms_graph(graph, field)
     field = draw_paths(graph, field)
     person = PlayerInitState(Coordinate(graph.cornery + graph.height // 2, graph.cornerx + graph.width // 2), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)))
-    field, mobs = generate_mobs(field)
-    result = Map(config.height, config.width, field)
-    return GeneratedMap(result, person, mobs)
-
-def generate_mobs(field):
-    mobs = [0] * random.randint(3, 6)
     used = set()
+    used.add((graph.cornery + graph.height // 2, graph.cornerx + graph.width // 2))
+    used, mobs = generate_mobs(field, used)
+    used, clothes = generate_clothes(field, used)
+    result = Map(config.height, config.width, field)
+    return GeneratedMap(result, person, mobs, clothes)
+
+def generate_mobs(field, used):
+    mobs = [0] * random.randint(3, 6)
     for i in range(len(mobs)):
         while True:
             x = random.randint(0, len(field[0]) - 1)
@@ -50,7 +52,21 @@ def generate_mobs(field):
             used.add((y, x))
             mobs[i] = MobInitState(Coordinate(y, x), FightStats(MAX_HEALTH, random.randint(0, MAX_STRENGTH)), random.choice(list(ModMode)))
             break
-    return field, mobs
+    return used, mobs
+
+
+def generate_clothes(field, used):
+    clothes = [0] * random.randint(3, 6)
+    for i in range(len(clothes)):
+        while True:
+            x = random.randint(0, len(field[0]) - 1)
+            y = random.randint(0, len(field) - 1)
+            if field[y][x] != CellType.ROOM_SPACE or (y, x) in used:
+                continue
+            used.add((y, x))
+            clothes[i] = ClothesInitState(Coordinate(y, x), ClothesStats(random.randint(0, MAX_STRENGTH), random.randint(0, MAX_STRENGTH)))
+            break
+    return used, clothes
         
 
 def draw_paths(graph, field):
