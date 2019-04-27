@@ -82,6 +82,8 @@ class UnitsInteractor:
             unit = self.__game_content.players_by_id[attack.target]
         assert unit is not None
         unit.get_damaged(attack)
+        if attack.confusion and unit is MobState:
+            unit.confuse()
         if unit.data.fight_stats.current_health <= 0:
             if unit.data.unit_type is UnitState.UnitType.MOB:
                 del self.__game_content.mobs[unit.data.unit_id]
@@ -134,7 +136,8 @@ class UnitState:
             context = self.game_interactor.get_context(self)
             for unit_view in context.player_views + context.mob_views:
                 if new_coordinate == unit_view.coordinate:
-                    self.game_interactor.attack(self, UnitState.UnitAttack(unit_view.unit_id, self.data.fight_stats.strength))
+                    self.game_interactor.attack(self,
+                                                UnitState.UnitAttack(unit_view.unit_id, self.data.fight_stats.strength))
                     return
             self.data.coordinate = new_coordinate
 
@@ -205,6 +208,9 @@ class MobState(UnitState):
 
     def act(self):
         self.strategy.act(self, self.game_interactor.get_context(self))
+
+    def confuse(self):
+        self.strategy = ConfusedStrategy(self.strategy)
 
 
 class MapView:
@@ -279,3 +285,15 @@ class FrightenedStrategy(PlayersDistanceBasedMobStrategy):
     @classmethod
     def action_weight(cls, state_change, mob, context):
         return super().dist_weight(state_change, mob, context)
+
+
+class ConfusedStrategy(MobStrategy):
+    def __init__(self, strategy):
+        if strategy is ConfusedStrategy:
+            strategy = strategy.strategy
+        self.strategy = strategy
+        self.counter = random.randint(2, 5)
+
+    def action_weight(self, state_change, mob, context):
+        self.counter -= 1
+        return random.randint(-10, 10) if self.counter >= 0 else self.strategy.action_weight(state_change, mob, context)
