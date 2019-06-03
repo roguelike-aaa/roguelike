@@ -58,6 +58,28 @@ class Mob:
         self.fight_stats = fight_stats
 
 
+class PlayerItemState(enum.Enum):
+    OFF = enum.auto()
+    ACTIVE = enum.auto()
+
+
+class PlayersItem:
+    def __init__(self, item, state=PlayerItemState.OFF):
+        self.item = item
+        self.state = state
+
+
+class Inventory:
+    def __init__(self, items=None):
+        if items is None:
+            items = []
+        self.active_helmet = None
+        self.active_shirt = None
+        self.active_weapon = None
+
+        self.items = items
+
+
 class PlayerMap:
     """
         Class storing a full player knowledge about the game.

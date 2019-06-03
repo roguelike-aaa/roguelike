@@ -7,6 +7,8 @@
 # MapGenerator -> (GeneratedMap) -> Controller
 import enum
 
+from shared.common import Coordinate, Bonus, Item
+
 
 class MapConfig:
     """
@@ -99,3 +101,9 @@ class ClothesStats:
         """
         self.health_add = health_add
         self.strength_add = strength_add
+
+
+class ItemState:
+    def __init__(self, coordinate: Coordinate, item: Item):
+        self.coordinate = coordinate
+        self.item = item

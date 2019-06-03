@@ -1,4 +1,5 @@
 import enum
+import uuid
 
 """
     General game elements shared between all components.
@@ -66,3 +67,48 @@ class CellType(enum.Enum):
     PATH = '#'
     HERO = '@'
     ERROR = '倈'
+
+
+class Bonus:
+    def __init__(self, health_bonus=0, strength_bonus=0):
+        self.health_bonus = health_bonus
+        self.strength_bonus = strength_bonus
+
+
+class ItemType(enum.Enum):
+    UNKNOWN = enum.auto(),
+    WEAPON = enum.auto(),
+    POTION = enum.auto(),
+    CLOTH = enum.auto(),
+
+
+class Item:
+    def __init__(self, bonus: Bonus, name: str):
+        self.id = uuid.uuid4()
+        self.bonus = bonus
+        self.name = name
+        self.item_type = ItemType.UNKNOWN
+
+
+class Weapon(Item):
+    def __init__(self, bonus: Bonus, name: str):
+        super().__init__(bonus, name)
+        self.item_type = ItemType.WEAPON
+
+
+class Potion(Item):
+    def __init__(self, bonus: Bonus, name: str):
+        super().__init__(bonus, name)
+        self.item_type = ItemType.POTION
+
+
+class ClothType(enum.Enum):
+    BODY = enum.auto(),
+    HEAD = enum.auto(),
+
+
+class Cloth(Item):
+    def __init__(self, bonus: Bonus, name: str, cloth_type: ClothType):
+        super().__init__(bonus, name)
+        self.cloth_type = cloth_type
+        self.item_type = ItemType.CLOTH
