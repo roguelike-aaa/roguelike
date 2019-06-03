@@ -109,6 +109,14 @@ class MoveType(enum.Enum):
     NO = enum.auto()
 
 
+class ItemActions(enum.Enum):
+    """
+        Types of items actions
+    """
+    DROP = enum.auto()
+    USE = enum.auto()
+    REMOVE = enum.auto()
+
 class PlayerMove:
     """
         Wrapper for the move type. (In case if some complex moves will appear).
