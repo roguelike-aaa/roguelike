@@ -1,5 +1,5 @@
 from controller.session import Session
-from mapgenerator.generator import generate_map
+from map.generator import generate_map
 from shared.map_init import MapConfig
 from shared.player_map import Player, PlayerMap, GameSettings, CurrentFightStats, Mob
 
