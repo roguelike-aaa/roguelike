@@ -1,9 +1,9 @@
 from tcod import tcod
 import time
 
-from consoleUI.commands import AskMap, MakeMove, ActionsItem
+from shared.commands import AskMap, MakeMove, ActionsItem
 from shared.common import Item, CellType
-from shared.player_map import MoveType, ItemActions, PlayerMove
+from shared.player_map import MoveType, ItemActions
 
 
 class ConsoleUI:
