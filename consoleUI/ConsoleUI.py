@@ -11,10 +11,12 @@ class ConsoleUI:
         self.__commandReceiver = commandReceiver
         self.__commandSender = commandSender
         self.__map = None
+        self.__items = []
+        self.__selected_item = 0
 
     def start(self, map):
         self.__map = self.__get_map_from_controller()
-        screen_width = len(map.map) + 10
+        screen_width = len(map.map) + 40
         screen_height = len(map.map[0]) + 20
         tcod.console_set_custom_font('arial12x12.png', tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD)
         console = tcod.console_init_root(screen_width, screen_height, 'Roguelike AAA', False)
@@ -53,8 +55,7 @@ class ConsoleUI:
             if action is not None:
                 self.__send_move(action)
 
-    @staticmethod
-    def __handle_keys(key):
+    def __handle_keys(self, key):
         if key.vk == tcod.KEY_UP:
             return MoveType.UP
         elif key.vk == tcod.KEY_DOWN:
@@ -63,6 +64,15 @@ class ConsoleUI:
             return MoveType.LEFT
         elif key.vk == tcod.KEY_RIGHT:
             return MoveType.RIGHT
+        elif key.vk in range(tcod.KEY_1, tcod.KEY_9 + 1):
+            self.__selected_item = key.vk - tcod.KEY_1 + 1
+        elif key.vk == tcod.KEY_CHAR:
+            if key.c == ord('Q') and self.__selected_item:
+                self.__send_item_action(ItemActions.DROP, self.__items[self.__selected_item - 1])
+            if key.c == ord('W') and self.__selected_item:
+                self.__send_item_action(ItemActions.REMOVE, self.__items[self.__selected_item - 1])
+            if key.c == ord('E') and self.__selected_item:
+                self.__send_item_action(ItemActions.USE, self.__items[self.__selected_item - 1])
         else:
             return None
 
@@ -98,3 +108,21 @@ class ConsoleUI:
             tcod.console_put_char(console, padding, len(map.map) + 12, s, tcod.BKGND_NONE)
             padding += 1
 
+    def __write_items(self, console, items, map):
+        padding_right = len(map.map) + 10
+        padding_top = 10
+        for ind, item in enumerate(items):
+            if ind + 1 == self.__selected_item:
+                self.__write_item(console, item, padding_right, padding_top, True)
+            else:
+                self.__write_item(console, item, padding_right, padding_top)
+            padding_top += 10
+
+    @staticmethod
+    def __write_item(console, item, padding_right, padding_top, selected=False):
+        if selected:
+            tcod.console_put_char(console, padding_right, padding_top, '*', tcod.BKGND_NONE)
+            padding_right += 1
+        for s in str(item.name):
+            tcod.console_put_char(console, padding_right, padding_top, s, tcod.BKGND_NONE)
+            padding_right += 1
