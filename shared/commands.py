@@ -1,5 +1,5 @@
 from shared.common import Item
-from shared.player_map import MoveType, ItemActions
+from shared.player_map import MoveType, ItemActionType
 
 
 class Command:
@@ -20,7 +20,7 @@ class ActionsItem(Command):
     """
         Send controller user action with item
     """
-    def __init__(self, action: ItemActions, item: Item):
+    def __init__(self, action: ItemActionType, item: Item):
         self.__action = action
         self.__item = item
 

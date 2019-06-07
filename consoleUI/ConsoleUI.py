@@ -3,7 +3,7 @@ import time
 
 from shared.commands import AskMap, MakeMove, ActionsItem
 from shared.common import Item, CellType
-from shared.player_map import MoveType, ItemActions
+from shared.player_map import MoveType, ItemActionType
 
 
 class ConsoleUI:
@@ -35,7 +35,7 @@ class ConsoleUI:
     def __send_move(self, move: MoveType):
         self.__commandSender.push(MakeMove(move))
 
-    def __send_item_action(self, action: ItemActions, item: Item):
+    def __send_item_action(self, action: ItemActionType, item: Item):
         self.__commandSender.push(ActionsItem(action, item))
 
     def __make_command(self):
@@ -68,11 +68,11 @@ class ConsoleUI:
             self.__selected_item = key.vk - tcod.KEY_1 + 1
         elif key.vk == tcod.KEY_CHAR:
             if key.c == ord('Q') and self.__selected_item:
-                self.__send_item_action(ItemActions.DROP, self.__items[self.__selected_item - 1])
+                self.__send_item_action(ItemActionType.DROP, self.__items[self.__selected_item - 1])
             if key.c == ord('W') and self.__selected_item:
-                self.__send_item_action(ItemActions.REMOVE, self.__items[self.__selected_item - 1])
+                self.__send_item_action(ItemActionType.REMOVE, self.__items[self.__selected_item - 1])
             if key.c == ord('E') and self.__selected_item:
-                self.__send_item_action(ItemActions.USE, self.__items[self.__selected_item - 1])
+                self.__send_item_action(ItemActionType.USE, self.__items[self.__selected_item - 1])
         else:
             return None
 

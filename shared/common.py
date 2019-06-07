@@ -1,5 +1,6 @@
 import enum
 import uuid
+from abc import ABC
 
 """
     General game elements shared between all components.
@@ -66,6 +67,7 @@ class CellType(enum.Enum):
     DOOR = '*'
     PATH = '#'
     HERO = '@'
+    ITEM = '!'
     ERROR = '倈'
 
 
@@ -82,7 +84,7 @@ class ItemType(enum.Enum):
     CLOTH = enum.auto(),
 
 
-class Item:
+class Item(ABC):
     def __init__(self, bonus: Bonus, name: str):
         self.id = uuid.uuid4()
         self.bonus = bonus

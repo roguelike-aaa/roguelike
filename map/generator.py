@@ -1,7 +1,8 @@
 import random
 
-from shared.common import CellType, Map, Coordinate
-from shared.map_init import GeneratedMap, PlayerInitState, FightStats, MobInitState, ModMode, ClothesInitState, ClothesStats
+from shared.common import CellType, Map, Coordinate, Cloth, Bonus, ClothType
+from shared.map_init import GeneratedMap, PlayerInitState, FightStats, MobInitState, ModMode, ItemInitState
+
 # from .shared.map import *
 
 MIN_WIDTH = 4
@@ -64,7 +65,13 @@ def generate_clothes(field, used):
             if field[y][x] != CellType.ROOM_SPACE or (y, x) in used:
                 continue
             used.add((y, x))
-            clothes[i] = ClothesInitState(Coordinate(y, x), ClothesStats(random.randint(0, MAX_STRENGTH), random.randint(0, MAX_STRENGTH)))
+            strength_bonus = random.randint(0, MAX_STRENGTH)
+            health_bonus = random.randint(0, MAX_HEALTH)
+            clothes[i] = ItemInitState(
+                Coordinate(y, x),
+                Cloth(Bonus(strength_bonus, health_bonus),
+                      "Magical pants +{} +{}".format(strength_bonus, health_bonus),
+                      ClothType.BODY))
             break
     return used, clothes
         

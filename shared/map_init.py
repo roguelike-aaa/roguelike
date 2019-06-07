@@ -6,6 +6,7 @@
 # Controller -> (MapConfig) -> MapGenerator
 # MapGenerator -> (GeneratedMap) -> Controller
 import enum
+from abc import ABC
 
 from shared.common import Coordinate, Bonus, Item
 
@@ -29,7 +30,7 @@ class GeneratedMap:
         Class storing the map layout and players states on the map.
     """
 
-    def __init__(self, game_map, player_init_states, mobs, clothes):
+    def __init__(self, game_map, player_init_states, mobs, items):
         """
         :param game_map: 2-dimensional array of CellType elements of height x width size.
         :param player_init_states: player state at the beginning of the game.
@@ -37,50 +38,7 @@ class GeneratedMap:
         self.map = game_map
         self.player_init_states = player_init_states
         self.mobs = mobs
-        self.clothes = clothes
-
-
-class PlayerInitState:
-    """
-        State of the player at the beginning og the game.
-    """
-
-    def __init__(self, coordinate, fight_stats):
-        """
-        :param coordinate: player starting coordinate.
-        """
-        self.fight_stats = fight_stats
-        self.coordinate = coordinate
-
-
-class ModMode(enum.Enum):
-    FRIGHTENED = enum.auto()
-    AGGRESSIVE = enum.auto()
-    PASSIVE = enum.auto()
-
-
-class MobInitState:
-    """
-        State of the mob at the beginning og the game.
-    """
-
-    def __init__(self, coordinate, fight_stats, mob_mode):
-        """
-        :param coordinate: mob starting coordinate.
-        """
-        self.fight_stats = fight_stats
-        self.coordinate = coordinate
-        self.mob_mode = mob_mode
-
-
-class ClothesInitState:
-    """
-        State of the clothes and stuff at the beginning of the game.
-    """
-
-    def __init__(self, coordinate, clothes_stats):
-        self.coordinate = coordinate
-        self.clothes_stats = clothes_stats
+        self.items = items
 
 
 class FightStats:
@@ -93,17 +51,49 @@ class FightStats:
         self.strength = strength
 
 
-class ClothesStats:
-    def __init__(self, health_add, strength_add):
-        """
-        :param health_add: what will be added to character's health
-        :param strength: what will be added to character's strength
-        """
-        self.health_add = health_add
-        self.strength_add = strength_add
-
-
-class ItemState:
-    def __init__(self, coordinate: Coordinate, item: Item):
+class MapObjectInitState(ABC):
+    def __init__(self, coordinate: Coordinate):
         self.coordinate = coordinate
+
+
+class UnitInitState(MapObjectInitState):
+    def __init__(self, coordinate: Coordinate, fight_stats: FightStats):
+        super().__init__(coordinate)
+        self.fight_stats = fight_stats
+
+
+class PlayerInitState(UnitInitState):
+    """
+        State of the player at the beginning og the game.
+    """
+
+    def __init__(self, coordinate: Coordinate, fight_stats: FightStats):
+        """
+        :param coordinate: player starting coordinate.
+        """
+        super().__init__(coordinate, fight_stats)
+
+
+class ModMode(enum.Enum):
+    FRIGHTENED = enum.auto()
+    AGGRESSIVE = enum.auto()
+    PASSIVE = enum.auto()
+
+
+class MobInitState(UnitInitState):
+    """
+        State of the mob at the beginning og the game.
+    """
+
+    def __init__(self, coordinate, fight_stats, mob_mode):
+        """
+        :param coordinate: mob starting coordinate.
+        """
+        super().__init__(coordinate, fight_stats)
+        self.mob_mode = mob_mode
+
+
+class ItemInitState(MapObjectInitState):
+    def __init__(self, coordinate: Coordinate, item: Item):
+        super().__init__(coordinate)
         self.item = item

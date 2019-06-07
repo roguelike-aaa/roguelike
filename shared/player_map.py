@@ -1,6 +1,7 @@
 import enum
+from abc import ABC
 
-from shared.common import Coordinate
+from shared.common import Coordinate, Item
 
 """
     Classes for interaction between UI and Controller
@@ -64,7 +65,7 @@ class PlayerItemState(enum.Enum):
 
 
 class PlayersItem:
-    def __init__(self, item, state=PlayerItemState.OFF):
+    def __init__(self, item: Item, state=PlayerItemState.OFF):
         self.item = item
         self.state = state
 
@@ -109,15 +110,34 @@ class MoveType(enum.Enum):
     NO = enum.auto()
 
 
-class ItemActions(enum.Enum):
+class ItemActionType(enum.Enum):
     """
         Types of items actions
     """
     DROP = enum.auto()
     USE = enum.auto()
-    REMOVE = enum.auto()
+    WEAR = enum.auto()
+    REMOVE_FROM_SLOT = enum.auto()
 
-class PlayerMove:
+
+class Change(ABC):
+    """
+        Abstract class for player change.
+    """
+    pass
+
+
+class ItemAction(Change):
+    """
+        Wrapper for the item action.
+    """
+
+    def __init__(self, action_type: ItemActionType, item: Item):
+        self.action_type = action_type
+        self.item = item
+
+
+class PlayerMove(Change):
     """
         Wrapper for the move type. (In case if some complex moves will appear).
     """
@@ -131,11 +151,11 @@ class StateChange:
         Describes the player's state change.
     """
 
-    def __init__(self, player_move: PlayerMove):
+    def __init__(self, change: Change):
         """
-        :param player_move: relative move that player made.
+        :param change: change that player made.
         """
-        self.player_move = player_move
+        self.change = change
 
 
 # Create new game
