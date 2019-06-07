@@ -1,9 +1,9 @@
 from tcod import tcod
 import time
 
-from shared.command import AskMap, MakeMove, ActionsItem
+from shared.command import AskMap, ChangeState
 from shared.common import Item, CellType
-from shared.player_map import MoveType, ItemActionType
+from shared.player_map import MoveType, ItemActionType, StateChange, PlayerMove, ItemAction
 
 
 class ConsoleUI:
@@ -33,10 +33,10 @@ class ConsoleUI:
         self.__commandSender.push(AskMap())
 
     def __send_move(self, move: MoveType):
-        self.__commandSender.push(MakeMove(move))
+        self.__commandSender.push(ChangeState(StateChange(PlayerMove(move))))
 
     def __send_item_action(self, action: ItemActionType, item: Item):
-        self.__commandSender.push(ActionsItem(action, item))
+        self.__commandSender.push(ChangeState(StateChange(ItemAction(action, item))))
 
     def __make_command(self):
         pass

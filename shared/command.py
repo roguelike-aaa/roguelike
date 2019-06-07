@@ -1,7 +1,8 @@
 import queue
+from abc import ABC
 
 from shared.common import Item
-from shared.player_map import MoveType, ItemActionType
+from shared.player_map import MoveType, ItemActionType, StateChange
 
 
 class CommandQueue:
@@ -59,29 +60,19 @@ class LocalQueue(CommandQueue):
         self.__queue.put(element)
 
 
-class Command:
+class Command(ABC):
     """
         Abstract class for commands between ui and controller
     """
 
 
-class MakeMove(Command):
+class ChangeState(Command):
     """
         Send controller user move
     """
 
-    def __init__(self, move: MoveType):
-        self.__move = move
-
-
-class ActionsItem(Command):
-    """
-        Send controller user action with item
-    """
-
-    def __init__(self, action: ItemActionType, item: Item):
-        self.__action = action
-        self.__item = item
+    def __init__(self, change: StateChange):
+        self.change = change
 
 
 class AskMap(Command):
