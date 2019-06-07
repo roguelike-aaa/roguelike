@@ -7,11 +7,15 @@ from abc import ABC
 from shared import player_map
 from shared.common import CellType, Coordinate
 from shared.player_map import MoveType
-from shared.map_init import ModMode
+from shared.map_init import ModMode, UnitInitState, MapObjectInitState, ItemInitState
 
 
 class Session:
-    def __init__(self, players, game_map, mobs):
+    def __init__(self, players, game_map, mobs=None, items=None):
+        if mobs is None:
+            mobs = []
+        if items is None:
+            items = []
         self.game_content = SessionContent(game_map)
         self.units_interactor = UnitsInteractor(self.game_content)
 
@@ -20,6 +24,9 @@ class Session:
 
         for mob in mobs:
             self.game_content.add_mob(MobState(game_map, mob, self.units_interactor))
+
+        for item in items:
+            self.game_content.add_item(ItemState(item))
 
     def change_player_state(self, player_token, state_change):
         player = self.game_content.players_by_token[player_token]
@@ -37,6 +44,9 @@ class Session:
                     (self.game_content.game_map.get_cell(i, j)
                      if mask is None or mask[i][j]
                      else CellType.EMPTY_SPACE).value)
+        for item in self.game_content.items.values():
+            if mask is None or mask[item.data.coordinate.x][item.data.coordinate.y]:
+                result_map[item.data.coordinate.x][item.data.coordinate.y] = CellType.ITEM.value
         for mob in self.game_content.mobs.values():
             if mask is None or mask[mob.data.coordinate.x][mob.data.coordinate.y]:
                 result_map[mob.data.coordinate.x][mob.data.coordinate.y] = CellType.MOB.value
@@ -61,14 +71,18 @@ class SessionContent:
         self.players_by_token = {}
         self.players_by_id = {}
         self.mobs = {}
+        self.items = {}
         self.game_map = game_map
 
     def add_player(self, player):
         self.players_by_token[player.token] = player
-        self.players_by_id[player.data.unit_id] = player
+        self.players_by_id[player.data.id] = player
 
     def add_mob(self, mob):
-        self.mobs[mob.data.unit_id] = mob
+        self.mobs[mob.data.id] = mob
+
+    def add_item(self, item):
+        self.items[item.data.id] = item
 
 
 class UnitsInteractor:
@@ -87,34 +101,40 @@ class UnitsInteractor:
             unit.confuse()
         if unit.data.fight_stats.current_health <= 0:
             if unit.data.unit_type is UnitState.UnitType.MOB:
-                del self.__game_content.mobs[unit.data.unit_id]
+                del self.__game_content.mobs[unit.data.id]
             elif unit.data.unit_type is UnitState.UnitType.PLAYER:
-                self.__game_content.players_by_id.pop(unit.data.unit_id, None)
+                self.__game_content.players_by_id.pop(unit.data.id, None)
                 self.__game_content.players_by_token.pop(unit.token, None)
 
     def get_context(self, unit):
         mask = unit.get_visible_area()
 
-        return MapView([MapView.MobView(mob.data.unit_id, mob.data.coordinate)
+        return MapView([MapView.MobView(mob.data.id, mob.data.coordinate)
                         for mob in self.__game_content.mobs.values()
                         if mask[mob.data.coordinate.x][mob.data.coordinate.y]],
-                       [MapView.PlayerView(player.data.unit_id, player.data.coordinate)
+                       [MapView.PlayerView(player.data.id, player.data.coordinate)
                         for player in self.__game_content.players_by_id.values()
                         if mask[player.data.coordinate.x][player.data.coordinate.y]]
                        )
 
 
-class UnitState:
+class MapObjectState(ABC):
+    class MapObjectData:
+        def __init__(self, obj: MapObjectInitState):
+            self.id = uuid.uuid4()
+            self.coordinate = obj.coordinate
+
+
+class UnitState(MapObjectState):
     class UnitType(enum.Enum):
         UNKNOWN = enum.auto()
         MOB = enum.auto()
         PLAYER = enum.auto()
 
-    class UnitData:
-        def __init__(self, game_map, unit):
+    class UnitData(MapObjectState.MapObjectData):
+        def __init__(self, game_map, unit: UnitInitState):
+            super().__init__(unit)
             self.map = game_map
-            self.coordinate = unit.coordinate
-            self.unit_id = uuid.uuid4()
             self.unit_type = UnitState.UnitType.UNKNOWN
             self.fight_stats = unit.fight_stats
 
@@ -131,14 +151,14 @@ class UnitState:
     }
 
     def change_state(self, state_change):
-        new_coordinate = self.data.coordinate + UnitState.move_deltas[state_change.player_move.move_type]
+        new_coordinate = self.data.coordinate + UnitState.move_deltas[state_change.change.move_type]
         if self.data.map.get_cell(new_coordinate.x, new_coordinate.y) \
                 in [CellType.DOOR, CellType.ROOM_SPACE, CellType.PATH]:
             context = self.game_interactor.get_context(self)
             for unit_view in context.player_views + context.mob_views:
                 if new_coordinate == unit_view.coordinate:
                     self.game_interactor.attack(self,
-                                                UnitState.UnitAttack(unit_view.unit_id, self.data.fight_stats.strength))
+                                                UnitState.UnitAttack(unit_view.id, self.data.fight_stats.strength))
                     return
             self.data.coordinate = new_coordinate
 
@@ -214,16 +234,26 @@ class MobState(UnitState):
         self.strategy = ConfusedStrategy(self.strategy)
 
 
+class ItemState(MapObjectState):
+    class ItemData(MapObjectState.MapObjectData):
+        def __init__(self, item: ItemInitState):
+            super().__init__(item)
+            self.item = item.item
+
+    def __init__(self, item: ItemInitState):
+        self.data = MapObjectState.MapObjectData(item)
+
+
 class MapView:
-    class UnitView:
-        def __init__(self, unit_id, coordinate: Coordinate):
-            self.unit_id = unit_id
+    class MapObjectView:
+        def __init__(self, id, coordinate: Coordinate):
+            self.id = id
             self.coordinate = coordinate
 
-    class MobView(UnitView):
+    class MobView(MapObjectView):
         pass
 
-    class PlayerView(UnitView):
+    class PlayerView(MapObjectView):
         pass
 
     def __init__(self, mobs, players):
@@ -260,7 +290,7 @@ class PlayersDistanceBasedMobStrategy(MobStrategy, ABC):
             # No players nearby
             return 0 if state_change.player_move.move_type is MoveType.NO else None
 
-        new_coordinate = mob.data.coordinate + mob.move_deltas[state_change.player_move.move_type]
+        new_coordinate = mob.data.coordinate + mob.move_deltas[state_change.change.move_type]
         cell = mob.data.map.get_cell(new_coordinate.x, new_coordinate.y)
         if cell not in [CellType.PATH, CellType.DOOR, CellType.ROOM_SPACE]:
             return None
@@ -279,7 +309,7 @@ class PassiveStrategy(MobStrategy):
     @classmethod
     def action_weight(cls, state_change, mob, context):
         # Does nothing
-        return 0 if state_change.player_move is MoveType.NO else -1
+        return 0 if state_change.change is MoveType.NO else -1
 
 
 class FrightenedStrategy(PlayersDistanceBasedMobStrategy):
