@@ -1,7 +1,7 @@
 from tcod import tcod
 import time
 
-from shared.commands import AskMap, MakeMove, ActionsItem
+from shared.command import AskMap, MakeMove, ActionsItem
 from shared.common import Item, CellType
 from shared.player_map import MoveType, ItemActionType
 

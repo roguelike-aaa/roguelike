@@ -1,5 +1,8 @@
 import queue
 
+from shared.common import Item
+from shared.player_map import MoveType, ItemActionType
+
 
 class CommandQueue:
     def is_empty(self):
@@ -31,7 +34,7 @@ class CommandReceiver:
         return self.__queue.pop()
 
 
-class Command:
+class CommandQueueCreator:
     def __init__(self, queue: CommandQueue):
         self.__queue = queue
 
@@ -54,3 +57,40 @@ class LocalQueue(CommandQueue):
 
     def put(self, element):
         self.__queue.put(element)
+
+
+class Command:
+    """
+        Abstract class for commands between ui and controller
+    """
+
+
+class MakeMove(Command):
+    """
+        Send controller user move
+    """
+
+    def __init__(self, move: MoveType):
+        self.__move = move
+
+
+class ActionsItem(Command):
+    """
+        Send controller user action with item
+    """
+
+    def __init__(self, action: ItemActionType, item: Item):
+        self.__action = action
+        self.__item = item
+
+
+class AskMap(Command):
+    """
+        Asking controller about map
+    """
+
+
+class AskItemsList(Command):
+    """
+        Asking controller about items list
+    """
