@@ -90,6 +90,7 @@ class SendMap(Command):
     """
         Sending players map in response to AskMap
     """
+
     def __init__(self, player_map: PlayerMap):
         self.map = player_map
 
@@ -98,5 +99,18 @@ class SendItemsList(Command):
     """
         Sending players map in response to AskMap
     """
+
     def __init__(self, player_map: PlayerMap):
         self.map = player_map
+
+
+class LoadGame(Command):
+    """
+        Load saved game request.
+    """
+
+
+class SaveGame(Command):
+    """
+        Save current game request.
+    """

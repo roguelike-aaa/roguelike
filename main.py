@@ -2,7 +2,8 @@ import argparse
 
 from consoleUI.ConsoleUI import ConsoleUI
 from controller.map_controller import MapController
-from shared.command import CommandQueueCreator, LocalQueue, AskMap, SendMap, AskItemsList, SendItemsList, ChangeState
+from shared.command import CommandQueueCreator, LocalQueue, AskMap, SendMap, AskItemsList, SendItemsList, ChangeState, \
+    LoadGame, SaveGame
 from shared.player_map import PlayerToken, GameSettings
 
 
@@ -43,6 +44,12 @@ def main():
                 continue
             if isinstance(new_command, ChangeState):
                 controller.change_state(new_command.change, token)
+                continue
+            if isinstance(new_command, LoadGame):
+                controller.load_game()
+                continue
+            if isinstance(new_command, SaveGame):
+                controller.save_game()
                 continue
 
 

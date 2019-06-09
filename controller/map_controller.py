@@ -1,5 +1,6 @@
 from controller.session import Session
 from map.generator import generate_map
+from map.saver import MapSaver
 from shared.map_init import MapConfig
 from shared.player_map import Player, PlayerMap, GameSettings, CurrentFightStats, Mob
 
@@ -7,6 +8,7 @@ from shared.player_map import Player, PlayerMap, GameSettings, CurrentFightStats
 class MapController:
 
     def __init__(self, player_token, game_settings: GameSettings):
+        self.session = None
         self.start_new_game(player_token, game_settings)
 
     def start_new_game(self, player_token, game_settings: GameSettings):
@@ -35,3 +37,9 @@ class MapController:
 
     def change_state(self, state_change, player_token):
         self.session.change_player_state(player_token, state_change)
+
+    def save_game(self):
+        MapSaver().save(self.session)
+
+    def load_game(self):
+        self.session = MapSaver().load()
