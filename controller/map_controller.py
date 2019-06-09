@@ -42,4 +42,5 @@ class MapController:
         MapSaver().save(self.session)
 
     def load_game(self):
-        self.session = MapSaver().load()
+        if MapSaver().exist_saved():
+            self.session = MapSaver().load()
