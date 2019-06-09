@@ -124,6 +124,13 @@ class UnitsInteractor:
             return True
         return False
 
+    def pick_items(self, player):
+        picked_items = list(filter(lambda x: x.data.coordinate == player.data.coordinate, self.__game_content.items))
+        self.__game_content.items = list(
+            filter(lambda x: not x.data.coordinate == player.data.coordinate, self.__game_content.items))
+        for item in picked_items:
+            player.inventory_controller.add_item(item.item)
+
 
 class MapObjectState(ABC):
     class MapObjectData:
@@ -165,7 +172,8 @@ class UnitState(MapObjectState):
             for unit_view in context.player_views + context.mob_views:
                 if new_coordinate == unit_view.coordinate:
                     self.game_interactor.attack(self,
-                                                UnitState.UnitAttack(unit_view.id, self.data.fight_stats.get_strength()))
+                                                UnitState.UnitAttack(unit_view.id,
+                                                                     self.data.fight_stats.get_strength()))
                     return
             self.data.coordinate = new_coordinate
 
@@ -270,6 +278,7 @@ class PlayerState(UnitState):
         if isinstance(state_change.change, PlayerMove):
             super().change_state(state_change)
             self.update_visible_area(self.get_visible_area())
+            self.game_interactor.pick_items(self)
 
         if isinstance(state_change.change, ItemAction):
             item_action: ItemAction = state_change.change
@@ -283,6 +292,7 @@ class PlayerState(UnitState):
                 ItemActionType.WEAR: lambda: "" if self.__inventory_controller.wear_item(
                     item_action.item) else "Can't put item on.",
             }[item_action.action_type]()
+            self.status += action_message + " "
         self.__update()
 
 
