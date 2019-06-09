@@ -119,17 +119,17 @@ class UnitsInteractor:
                         if mask[player.data.coordinate.x][player.data.coordinate.y]])
 
     def drop_item(self, item: Item, player):
-        if player.data.inventory_controller.remove_item(item):
-            self.__game_content.add_item(ItemState(ItemInitState(player.coordinate, item)))
+        if player.inventory_controller.remove_item(item):
+            self.__game_content.add_item(ItemState(ItemInitState(player.data.coordinate, item)))
             return True
         return False
 
     def pick_items(self, player):
-        picked_items = list(filter(lambda x: x.data.coordinate == player.data.coordinate, self.__game_content.items))
-        self.__game_content.items = list(
-            filter(lambda x: not x.data.coordinate == player.data.coordinate, self.__game_content.items))
+        picked_items = list(filter(lambda x: x.data.coordinate == player.data.coordinate, self.__game_content.items.values()))
+        self.__game_content.items = {x.id: x for x in
+            filter(lambda x: not x.data.coordinate == player.data.coordinate, self.__game_content.items.values())}
         for item in picked_items:
-            player.inventory_controller.add_item(item.item)
+            player.inventory_controller.add_item(item.data.item)
 
 
 class MapObjectState(ABC):
@@ -224,7 +224,7 @@ class InventoryController:
 
     def remove_item(self, item: Item):
         if item.id in self.inventory.items:
-            self.inventory.items.remove(item)
+            del self.inventory.items[item.id]
             return True
         return False
 
@@ -261,7 +261,7 @@ class PlayerState(UnitState):
         self.data = PlayerState.PlayerData(game_map, player)
         self.data.unit_type = UnitState.UnitType.PLAYER
         self.token = player.token
-        self.__inventory_controller = InventoryController(self.data.inventory)
+        self.inventory_controller = InventoryController(self.data.inventory)
         self.status = ""
         self.mask = [[0 for _ in range(game_map.width)] for _ in range(game_map.height)]
         self.update_visible_area(self.get_visible_area())
@@ -272,7 +272,7 @@ class PlayerState(UnitState):
                      for i in range(self.data.map.height)]
 
     def __update(self):
-        self.data.fight_stats.update_bonus(self.__inventory_controller.get_bonus())
+        self.data.fight_stats.update_bonus(self.inventory_controller.get_bonus())
 
     def change_state(self, state_change):
         if isinstance(state_change.change, PlayerMove):
@@ -285,11 +285,11 @@ class PlayerState(UnitState):
             action_message = {
                 ItemActionType.DROP: lambda: "" if self.game_interactor.drop_item(item_action.item,
                                                                                   self) else "Unable to drop item.",
-                ItemActionType.REMOVE_FROM_SLOT: lambda: "" if self.__inventory_controller.take_off_item(
+                ItemActionType.REMOVE_FROM_SLOT: lambda: "" if self.inventory_controller.take_off_item(
                     item_action.item) else "Can't take item off.",
-                ItemActionType.USE: lambda: "" if self.__inventory_controller.use_item(
+                ItemActionType.USE: lambda: "" if self.inventory_controller.use_item(
                     item_action.item) else "Can't use item.",
-                ItemActionType.WEAR: lambda: "" if self.__inventory_controller.wear_item(
+                ItemActionType.WEAR: lambda: "" if self.inventory_controller.wear_item(
                     item_action.item) else "Can't put item on.",
             }[item_action.action_type]()
             self.status += action_message + " "

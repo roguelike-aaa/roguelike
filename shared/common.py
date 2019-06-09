@@ -31,6 +31,9 @@ class Bonus:
     def __add__(self, other):
         return Bonus(self.health_bonus + other.health_bonus, self.strength_bonus + other.strength_bonus)
 
+    def __eq__(self, other):
+        return self.health_bonus == other.health_bonus and self.strength_bonus == other.strength_bonus
+
 
 class ItemType(enum.Enum):
     UNKNOWN = enum.auto(),
@@ -114,8 +117,9 @@ class Wearable(Item, ABC):
 
 class Weapon(Wearable):
     def wear(self, inventory: Inventory):
-        if inventory.active_weapon is not None:
+        if inventory.active_weapon is not None or self.id not in inventory.items:
             return False
+        del inventory.items[self.id]
         inventory.active_weapon = self
         return True
 
@@ -148,8 +152,9 @@ class BodyCloth(Cloth):
         super().__init__(bonus, name)
 
     def wear(self, inventory: Inventory):
-        if inventory.active_shirt is not None:
+        if inventory.active_shirt is not None or self.id not in inventory.items:
             return False
+        del inventory.items[self.id]
         inventory.active_shirt = self
         return True
 
@@ -166,8 +171,9 @@ class HeadCloth(Cloth):
         super().__init__(bonus, name)
 
     def wear(self, inventory: Inventory):
-        if inventory.active_helmet is not None:
+        if inventory.active_helmet is not None or self.id not in inventory.items:
             return False
+        del inventory.items[self.id]
         inventory.active_helmet = self
         return True
 

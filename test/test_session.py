@@ -156,7 +156,7 @@ class TestSession(unittest.TestCase):
         self.assertEqual([
             '  -- ',
             '#*.%|',
-            '# -- '], list(map(lambda x: "".join(x), self.session.dump_map())))
+            '# -- '], list(map(lambda x: "".join(x), self.session.dump_players_map(self.player_token))))
 
     def test_item_in_sight(self):
         self.session = Session([Player(Coordinate(1, 1), self.player_token, CurrentFightStats(3, 1))],
@@ -167,7 +167,6 @@ class TestSession(unittest.TestCase):
             '#*.!|',
             '  -- '], list(map(lambda x: "".join(x), self.session.dump_players_map(self.player_token))))
 
-
     def test_item_out_of_sight(self):
         self.session = Session([Player(Coordinate(1, 3), self.player_token, CurrentFightStats(3, 1))],
                                self.map,
@@ -176,3 +175,143 @@ class TestSession(unittest.TestCase):
             '  -- ',
             ' *..|',
             '  -- '], list(map(lambda x: "".join(x), self.session.dump_players_map(self.player_token))))
+
+    def test_picking_item(self):
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+                               self.map,
+                               items=[ItemInitState(Coordinate(1, 3), BodyCloth(Bonus(1, 2), "Foo"))])
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
+        new_items = list(self.session.game_content.players_by_token[self.player_token].data.inventory.items.values())
+        self.assertEqual(1, len(new_items))
+
+        self.assertEqual(Bonus(1, 2), new_items[0].bonus)
+
+        self.assertEqual([
+            '  -- ',
+            ' *..|',
+            '  -- '], list(map(lambda x: "".join(x), self.session.dump_players_map(self.player_token))))
+
+    def test_wearing_shirt(self):
+        item = ItemInitState(Coordinate(1, 3), BodyCloth(Bonus(1, 2), "Foo"))
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+                               self.map,
+                               items=[item])
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.WEAR, item.item)))
+
+        player = self.session.game_content.players_by_token[self.player_token]
+
+        inventory = player.data.inventory
+        new_items = list(inventory.items.values())
+        self.assertEqual(0, len(new_items))
+
+        self.assertEqual(4, player.data.fight_stats.get_health())
+        self.assertEqual(3, player.data.fight_stats.get_strength())
+        self.assertEqual(Bonus(1, 2), inventory.active_shirt.bonus)
+
+    def test_wearing_helmet(self):
+        item = ItemInitState(Coordinate(1, 3), HeadCloth(Bonus(1, 2), "Foo"))
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+                               self.map,
+                               items=[item])
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.WEAR, item.item)))
+        player = self.session.game_content.players_by_token[self.player_token]
+
+        inventory = player.data.inventory
+        new_items = list(inventory.items.values())
+        self.assertEqual(0, len(new_items))
+
+        self.assertEqual(4, player.data.fight_stats.get_health())
+        self.assertEqual(3, player.data.fight_stats.get_strength())
+        self.assertEqual(Bonus(1, 2), inventory.active_helmet.bonus)
+
+    def test_wearing_weapon(self):
+        item = ItemInitState(Coordinate(1, 3), Weapon(Bonus(1, 2), "Foo"))
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+                               self.map,
+                               items=[item])
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.WEAR, item.item)))
+        player = self.session.game_content.players_by_token[self.player_token]
+
+        inventory = player.data.inventory
+        new_items = list(inventory.items.values())
+        self.assertEqual(0, len(new_items))
+
+        self.assertEqual(4, player.data.fight_stats.get_health())
+        self.assertEqual(3, player.data.fight_stats.get_strength())
+        self.assertEqual(Bonus(1, 2), inventory.active_weapon.bonus)
+
+    def test_taking_off_shirt(self):
+        item = ItemInitState(Coordinate(1, 3), BodyCloth(Bonus(1, 2), "Foo"))
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+                               self.map,
+                               items=[item])
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.WEAR, item.item)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.REMOVE_FROM_SLOT, item.item)))
+        player = self.session.game_content.players_by_token[self.player_token]
+
+        inventory = player.data.inventory
+        new_items = list(inventory.items.values())
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(3, player.data.fight_stats.get_health())
+        self.assertEqual(1, player.data.fight_stats.get_strength())
+        self.assertEqual(None, inventory.active_shirt)
+
+    def test_taking_off_helmet(self):
+        item = ItemInitState(Coordinate(1, 3), HeadCloth(Bonus(1, 2), "Foo"))
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+                               self.map,
+                               items=[item])
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.WEAR, item.item)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.REMOVE_FROM_SLOT, item.item)))
+        player = self.session.game_content.players_by_token[self.player_token]
+
+        inventory = player.data.inventory
+        new_items = list(inventory.items.values())
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(3, player.data.fight_stats.get_health())
+        self.assertEqual(1, player.data.fight_stats.get_strength())
+        self.assertEqual(None, inventory.active_helmet)
+
+    def test_taking_off_weapon(self):
+        item = ItemInitState(Coordinate(1, 3), Weapon(Bonus(1, 2), "Foo"))
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+                               self.map,
+                               items=[item])
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.WEAR, item.item)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.REMOVE_FROM_SLOT, item.item)))
+        player = self.session.game_content.players_by_token[self.player_token]
+
+        inventory = player.data.inventory
+        new_items = list(inventory.items.values())
+        self.assertEqual(1, len(new_items))
+
+        self.assertEqual(3, player.data.fight_stats.get_health())
+        self.assertEqual(1, player.data.fight_stats.get_strength())
+        self.assertEqual(None, inventory.active_weapon)
+
+    def test_dropping_item(self):
+        item = ItemInitState(Coordinate(1, 3), Weapon(Bonus(1, 2), "Foo"))
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+                               self.map,
+                               items=[item])
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.LEFT)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.DROP, item.item)))
+        player = self.session.game_content.players_by_token[self.player_token]
+
+        inventory = player.data.inventory
+        new_items = list(inventory.items.values())
+        self.assertEqual(0, len(new_items))
+
+        self.assertEqual([
+            '  -- ',
+            '#*!.|',
+            '# -- '], list(map(lambda x: "".join(x), self.session.dump_map())))
+
+
