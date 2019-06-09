@@ -1,6 +1,6 @@
 import random
 
-from shared.common import CellType, Map, Coordinate, Cloth, Bonus, ClothType
+from shared.common import CellType, Map, Coordinate, Cloth, Bonus, BodyCloth
 from shared.map_init import GeneratedMap, PlayerInitState, FightStats, MobInitState, ModMode, ItemInitState
 
 # from .shared.map import *
@@ -69,9 +69,7 @@ def generate_clothes(field, used):
             health_bonus = random.randint(0, MAX_HEALTH)
             clothes[i] = ItemInitState(
                 Coordinate(y, x),
-                Cloth(Bonus(strength_bonus, health_bonus),
-                      "Magical pants +{} +{}".format(strength_bonus, health_bonus),
-                      ClothType.BODY))
+                BodyCloth(Bonus(strength_bonus, health_bonus), "Magical pants +{} +{}".format(strength_bonus, health_bonus)))
             break
     return used, clothes
         

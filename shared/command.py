@@ -1,8 +1,7 @@
 import queue
 from abc import ABC
 
-from shared.common import Item
-from shared.player_map import MoveType, ItemActionType, StateChange
+from shared.player_map import StateChange, PlayerMap
 
 
 class CommandQueue:
@@ -85,3 +84,19 @@ class AskItemsList(Command):
     """
         Asking controller about items list
     """
+
+
+class SendMap(Command):
+    """
+        Sending players map in response to AskMap
+    """
+    def __init__(self, player_map: PlayerMap):
+        self.map = player_map
+
+
+class SendItemsList(Command):
+    """
+        Sending players map in response to AskMap
+    """
+    def __init__(self, player_map: PlayerMap):
+        self.map = player_map

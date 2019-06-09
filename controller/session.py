@@ -5,9 +5,9 @@ import uuid
 from abc import ABC
 
 from shared import player_map
-from shared.common import CellType, Coordinate
-from shared.player_map import MoveType
-from shared.map_init import ModMode, UnitInitState, MapObjectInitState, ItemInitState
+from shared.common import CellType, Coordinate, Item, Usable, Wearable, Bonus
+from shared.player_map import MoveType, PlayerMove, ItemAction, Inventory, ItemActionType
+from shared.map_init import ModMode, UnitInitState, MapObjectInitState, ItemInitState, PlayerInitState
 
 
 class Session:
@@ -32,7 +32,7 @@ class Session:
         player = self.game_content.players_by_token[player_token]
         player.change_state(state_change)
         for mob in list(self.game_content.mobs.values()):
-            if mob.data.fight_stats.current_health > 0:
+            if mob.data.fight_stats.get_health() > 0:
                 mob.act()
 
     def dump_map(self, mask=None):
@@ -99,12 +99,14 @@ class UnitsInteractor:
         unit.get_damaged(attack)
         if attack.confusion and unit is MobState:
             unit.confuse()
-        if unit.data.fight_stats.current_health <= 0:
+        if unit.data.fight_stats.get_health() <= 0:
             if unit.data.unit_type is UnitState.UnitType.MOB:
                 del self.__game_content.mobs[unit.data.id]
             elif unit.data.unit_type is UnitState.UnitType.PLAYER:
-                self.__game_content.players_by_id.pop(unit.data.id, None)
-                self.__game_content.players_by_token.pop(unit.token, None)
+                self.__game_content.players_by_id[unit.data.id] = DeadPlayer(
+                    self.__game_content.players_by_id[unit.data.id])
+                self.__game_content.players_by_token[unit.token] = DeadPlayer(
+                    self.__game_content.players_by_token[unit.token])
 
     def get_context(self, unit):
         mask = unit.get_visible_area()
@@ -114,8 +116,13 @@ class UnitsInteractor:
                         if mask[mob.data.coordinate.x][mob.data.coordinate.y]],
                        [MapView.PlayerView(player.data.id, player.data.coordinate)
                         for player in self.__game_content.players_by_id.values()
-                        if mask[player.data.coordinate.x][player.data.coordinate.y]]
-                       )
+                        if mask[player.data.coordinate.x][player.data.coordinate.y]])
+
+    def drop_item(self, item: Item, player):
+        if player.data.inventory_controller.remove_item(item):
+            self.__game_content.add_item(ItemState(ItemInitState(player.coordinate, item)))
+            return True
+        return False
 
 
 class MapObjectState(ABC):
@@ -158,7 +165,7 @@ class UnitState(MapObjectState):
             for unit_view in context.player_views + context.mob_views:
                 if new_coordinate == unit_view.coordinate:
                     self.game_interactor.attack(self,
-                                                UnitState.UnitAttack(unit_view.id, self.data.fight_stats.strength))
+                                                UnitState.UnitAttack(unit_view.id, self.data.fight_stats.get_strength()))
                     return
             self.data.coordinate = new_coordinate
 
@@ -195,26 +202,88 @@ class UnitState(MapObjectState):
         self.game_interactor(self, unit_attack, self.data.fight_stats.strength)
 
     def get_damaged(self, unit_attack):
-        self.data.fight_stats.current_health -= unit_attack.damage
+        self.data.fight_stats.get_damaged(unit_attack.damage)
+
+
+class InventoryController:
+    def __init__(self, inventory: Inventory):
+        self.inventory = inventory
+        self.active_bonuses = {}
+
+    def add_item(self, item: Item):
+        self.inventory.items[item.id] = item
+        return True
+
+    def remove_item(self, item: Item):
+        if item.id in self.inventory.items:
+            self.inventory.items.remove(item)
+            return True
+        return False
+
+    def use_item(self, item: Usable):
+        result = self.remove_item(item)
+        if result:
+            self.active_bonuses[item.id] = item.bonus
+        return result
+
+    def wear_item(self, item: Wearable):
+        result = item.wear(self.inventory)
+        if result:
+            self.active_bonuses[item.id] = item.bonus
+        return result
+
+    def take_off_item(self, item: Wearable):
+        result = item.take_off(self.inventory)
+        if result:
+            del self.active_bonuses[item.id]
+        return result
+
+    def get_bonus(self):
+        return sum(self.active_bonuses.values(), Bonus(0, 0))
 
 
 class PlayerState(UnitState):
+    class PlayerData(UnitState.UnitData):
+        def __init__(self, game_map, player: PlayerInitState):
+            super().__init__(game_map, player)
+            self.inventory = Inventory()
+
     def __init__(self, game_map, player, game_interactor):
         super().__init__(game_map, player, game_interactor)
+        self.data = PlayerState.PlayerData(game_map, player)
         self.data.unit_type = UnitState.UnitType.PLAYER
         self.token = player.token
+        self.__inventory_controller = InventoryController(self.data.inventory)
         self.status = ""
         self.mask = [[0 for _ in range(game_map.width)] for _ in range(game_map.height)]
-        self.update_visible_area(self.get_visible_area())
-
-    def change_state(self, state_change):
-        super().change_state(state_change)
         self.update_visible_area(self.get_visible_area())
 
     def update_visible_area(self, another_mask):
         self.mask = [[another_mask[i][j] or self.mask[i][j]
                       for j in range(self.data.map.width)]
                      for i in range(self.data.map.height)]
+
+    def __update(self):
+        self.data.fight_stats.update_bonus(self.__inventory_controller.get_bonus())
+
+    def change_state(self, state_change):
+        if isinstance(state_change.change, PlayerMove):
+            super().change_state(state_change)
+            self.update_visible_area(self.get_visible_area())
+
+        if isinstance(state_change.change, ItemAction):
+            item_action: ItemAction = state_change.change
+            action_message = {
+                ItemActionType.DROP: lambda: "" if self.game_interactor.drop_item(item_action.item,
+                                                                                  self) else "Unable to drop item.",
+                ItemActionType.REMOVE_FROM_SLOT: lambda: "" if self.__inventory_controller.take_off_item(
+                    item_action.item) else "Can't take item off.",
+                ItemActionType.USE: lambda: "" if self.__inventory_controller.use_item(
+                    item_action.item) else "Can't use item.",
+                ItemActionType.WEAR: lambda: "" if self.__inventory_controller.wear_item(
+                    item_action.item) else "Can't put item on.",
+            }[item_action.action_type]()
+        self.__update()
 
 
 class MobState(UnitState):
@@ -241,7 +310,7 @@ class ItemState(MapObjectState):
             self.item = item.item
 
     def __init__(self, item: ItemInitState):
-        self.data = MapObjectState.MapObjectData(item)
+        self.data = ItemState.ItemData(item)
 
 
 class MapView:
@@ -288,7 +357,7 @@ class PlayersDistanceBasedMobStrategy(MobStrategy, ABC):
     def dist_weight(cls, state_change, mob, context):
         if not context.player_views:
             # No players nearby
-            return 0 if state_change.player_move.move_type is MoveType.NO else None
+            return 0 if state_change.change.move_type is MoveType.NO else None
 
         new_coordinate = mob.data.coordinate + mob.move_deltas[state_change.change.move_type]
         cell = mob.data.map.get_cell(new_coordinate.x, new_coordinate.y)
@@ -328,3 +397,23 @@ class ConfusedStrategy(MobStrategy):
     def action_weight(self, state_change, mob, context):
         self.counter -= 1
         return random.randint(-10, 10) if self.counter >= 0 else self.strategy.action_weight(state_change, mob, context)
+
+
+class DeadPlayer(PlayerState):
+    def __init__(self, player_state: PlayerState):
+        self.mask = None
+        self.token = player_state.token
+        self.data = player_state.data
+        self.status = "You are dead"
+
+    def update_visible_area(self, another_mask):
+        return
+
+    def change_state(self, state_change):
+        return
+
+    def get_visible_area(self):
+        return None
+
+    def get_damaged(self, unit_attack):
+        return

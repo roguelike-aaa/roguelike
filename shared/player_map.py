@@ -1,8 +1,6 @@
 import enum
 from abc import ABC
 
-from shared.common import Coordinate, Item
-
 """
     Classes for interaction between UI and Controller
 """
@@ -11,6 +9,24 @@ from shared.common import Coordinate, Item
 # Player state request
 # UI -> (pulls get map method) -> Controller
 # Controller -> (PlayerMap) -> UI
+
+class Inventory:
+    """
+        Class storing items carried or wore by player.
+    """
+
+    def __init__(self, items=None):
+        if items is None:
+            items = {}
+        self.active_helmet = None
+        self.active_shirt = None
+        self.active_weapon = None
+
+        self.items = {item.id: item for item in items}
+
+
+from shared.common import Coordinate, Item, Bonus
+
 
 class PlayerToken:
     """
@@ -31,10 +47,22 @@ class PlayerToken:
 
 
 class CurrentFightStats:
-    def __init__(self, current_health, max_health, strength):
-        self.current_health = current_health
-        self.max_health = max_health
-        self.strength = strength
+    def __init__(self, health, strength):
+        self.__current_bonus = Bonus()
+        self.__base_health = health
+        self.__strength = strength
+
+    def get_health(self):
+        return self.__base_health + self.__current_bonus.health_bonus if self.__base_health > 0 else 0
+
+    def get_strength(self):
+        return self.__strength + self.__current_bonus.strength_bonus
+
+    def update_bonus(self, bonus: Bonus):
+        self.__current_bonus = bonus
+
+    def get_damaged(self, damage: int):
+        self.__base_health -= damage
 
 
 class Player:
@@ -42,7 +70,10 @@ class Player:
         Class storing player position on the map.
     """
 
-    def __init__(self, coordinate: Coordinate, player_token: PlayerToken, fight_stats: CurrentFightStats):
+    def __init__(self,
+                 coordinate: Coordinate,
+                 player_token: PlayerToken,
+                 fight_stats: CurrentFightStats):
         """
         :param coordinate: position on the map.
         :param player_token: player identifier.
@@ -57,28 +88,6 @@ class Mob:
         self.coordinate = coordinate
         self.mob_mode = mob_mode
         self.fight_stats = fight_stats
-
-
-class PlayerItemState(enum.Enum):
-    OFF = enum.auto()
-    ACTIVE = enum.auto()
-
-
-class PlayersItem:
-    def __init__(self, item: Item, state=PlayerItemState.OFF):
-        self.item = item
-        self.state = state
-
-
-class Inventory:
-    def __init__(self, items=None):
-        if items is None:
-            items = []
-        self.active_helmet = None
-        self.active_shirt = None
-        self.active_weapon = None
-
-        self.items = items
 
 
 class PlayerMap:

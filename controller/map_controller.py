@@ -16,14 +16,16 @@ class MapController:
         player = generated_map.player_init_states
         self.session = Session([Player(player.coordinate,
                                        player_token, CurrentFightStats(player.fight_stats.health,
-                                                                       player.fight_stats.health,
                                                                        player.fight_stats.strength))],
                                generated_map.map, [Mob(mob.coordinate,
                                                        mob.mob_mode,
                                                        CurrentFightStats(mob.fight_stats.health,
-                                                                         mob.fight_stats.health,
                                                                          mob.fight_stats.strength))
                                                    for mob in generated_map.mobs])
+
+    def get_player_items(self, player_token):
+        player = self.session.game_content.players_by_token[player_token]
+        return player.data.inventory
 
     def get_player_map(self, player_token):
         player = self.session.game_content.players_by_token[player_token]

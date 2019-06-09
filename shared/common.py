@@ -2,6 +2,51 @@ import enum
 import uuid
 from abc import ABC
 
+
+class Coordinate:
+    """
+        Class storing a position on the map.
+    """
+
+    def __init__(self, x: int, y: int):
+        """
+        :param x: height coordinate.
+        :param y: width coordinate.
+        """
+        self.x = x
+        self.y = y
+
+    def __add__(self, other):
+        return Coordinate(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+
+class Bonus:
+    def __init__(self, health_bonus=0, strength_bonus=0):
+        self.health_bonus = health_bonus
+        self.strength_bonus = strength_bonus
+
+    def __add__(self, other):
+        return Bonus(self.health_bonus + other.health_bonus, self.strength_bonus + other.strength_bonus)
+
+
+class ItemType(enum.Enum):
+    UNKNOWN = enum.auto(),
+    WEAPON = enum.auto(),
+    POTION = enum.auto(),
+    CLOTH = enum.auto(),
+
+
+class Item(ABC):
+    def __init__(self, bonus: Bonus, name: str):
+        self.id = uuid.uuid4()
+        self.bonus = bonus
+        self.name = name
+        self.item_type = ItemType.UNKNOWN
+
+
 """
     General game elements shared between all components.
 """
@@ -35,26 +80,6 @@ class Map:
             width] if 0 <= height < self.height and 0 <= width < self.width else CellType.ERROR
 
 
-class Coordinate:
-    """
-        Class storing a position on the map.
-    """
-
-    def __init__(self, x: int, y: int):
-        """
-        :param x: height coordinate.
-        :param y: width coordinate.
-        """
-        self.x = x
-        self.y = y
-
-    def __add__(self, other):
-        return Coordinate(self.x + other.x, self.y + other.y)
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-
 class CellType(enum.Enum):
     """
         Class describing possible map cell content.
@@ -71,28 +96,36 @@ class CellType(enum.Enum):
     ERROR = '倈'
 
 
-class Bonus:
-    def __init__(self, health_bonus=0, strength_bonus=0):
-        self.health_bonus = health_bonus
-        self.strength_bonus = strength_bonus
+from shared.player_map import Inventory
 
 
-class ItemType(enum.Enum):
-    UNKNOWN = enum.auto(),
-    WEAPON = enum.auto(),
-    POTION = enum.auto(),
-    CLOTH = enum.auto(),
+class Usable(Item, ABC):
+    def use(self, inventory: Inventory):
+        raise NotImplementedError()
 
 
-class Item(ABC):
-    def __init__(self, bonus: Bonus, name: str):
-        self.id = uuid.uuid4()
-        self.bonus = bonus
-        self.name = name
-        self.item_type = ItemType.UNKNOWN
+class Wearable(Item, ABC):
+    def wear(self, inventory):
+        raise NotImplementedError()
+
+    def take_off(self, inventory):
+        raise NotImplementedError()
 
 
-class Weapon(Item):
+class Weapon(Wearable):
+    def wear(self, inventory: Inventory):
+        if inventory.active_weapon is not None:
+            return False
+        inventory.active_weapon = self
+        return True
+
+    def take_off(self, inventory: Inventory):
+        if inventory.active_weapon is not None:
+            inventory.items[self.id] = self
+            inventory.active_weapon = None
+            return True
+        return False
+
     def __init__(self, bonus: Bonus, name: str):
         super().__init__(bonus, name)
         self.item_type = ItemType.WEAPON
@@ -104,13 +137,43 @@ class Potion(Item):
         self.item_type = ItemType.POTION
 
 
-class ClothType(enum.Enum):
-    BODY = enum.auto(),
-    HEAD = enum.auto(),
-
-
-class Cloth(Item):
-    def __init__(self, bonus: Bonus, name: str, cloth_type: ClothType):
+class Cloth(Wearable, ABC):
+    def __init__(self, bonus: Bonus, name: str):
         super().__init__(bonus, name)
-        self.cloth_type = cloth_type
         self.item_type = ItemType.CLOTH
+
+
+class BodyCloth(Cloth):
+    def __init__(self, bonus: Bonus, name: str):
+        super().__init__(bonus, name)
+
+    def wear(self, inventory: Inventory):
+        if inventory.active_shirt is not None:
+            return False
+        inventory.active_shirt = self
+        return True
+
+    def take_off(self, inventory: Inventory):
+        if inventory.active_shirt is not None:
+            inventory.items[self.id] = self
+            inventory.active_shirt = None
+            return True
+        return False
+
+
+class HeadCloth(Cloth):
+    def __init__(self, bonus: Bonus, name: str):
+        super().__init__(bonus, name)
+
+    def wear(self, inventory: Inventory):
+        if inventory.active_helmet is not None:
+            return False
+        inventory.active_helmet = self
+        return True
+
+    def take_off(self, inventory: Inventory):
+        if inventory.active_helmet is not None:
+            inventory.items[self.id] = self
+            inventory.active_helmet = None
+            return True
+        return False
