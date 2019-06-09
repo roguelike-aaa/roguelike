@@ -314,4 +314,20 @@ class TestSession(unittest.TestCase):
             '#*!.|',
             '# -- '], list(map(lambda x: "".join(x), self.session.dump_map())))
 
+    def test_drinking_potion(self):
+        item = ItemInitState(Coordinate(1, 3), Potion(Bonus(1, 2), "Foo"))
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+                               self.map,
+                               items=[item])
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
+        self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.LEFT)))
+        self.session.change_player_state(self.player_token, StateChange(ItemAction(ItemActionType.USE, item.item)))
+        player = self.session.game_content.players_by_token[self.player_token]
 
+        inventory = player.data.inventory
+        new_items = list(inventory.items.values())
+        self.assertEqual(0, len(new_items))
+
+        self.assertEqual(4, player.data.fight_stats.get_health())
+        self.assertEqual(3, player.data.fight_stats.get_strength())
+        self.assertEqual(None, inventory.active_weapon)
