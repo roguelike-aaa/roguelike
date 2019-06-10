@@ -1,7 +1,7 @@
 from controller.session import Session
 from map.generator import generate_map
 from map.saver import MapSaver
-from shared.map_init import MapConfig
+from shared.map_init import MapConfig, ItemInitState
 from shared.player_map import Player, PlayerMap, GameSettings, CurrentFightStats, Mob
 
 
@@ -27,7 +27,7 @@ class MapController:
                                                        mob.mob_mode,
                                                        CurrentFightStats(mob.fight_stats.health,
                                                                          mob.fight_stats.strength))
-                                                   for mob in generated_map.mobs])
+                                                   for mob in generated_map.mobs], generated_map.items)
 
     def get_player_items(self, player_token):
         """
