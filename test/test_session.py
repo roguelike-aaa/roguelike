@@ -179,7 +179,8 @@ class TestSession(unittest.TestCase):
     def test_picking_item(self):
         self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
                                self.map,
-                               items=[ItemInitState(Coordinate(1, 3), BodyCloth(Bonus(1, 2), "Foo"))])
+                               items=[ItemInitState(Coordinate(1, 3), BodyCloth(Bonus(1, 2), "Foo")),
+                                      ItemInitState(Coordinate(1, 1), BodyCloth(Bonus(1, 0), "Bar"))])
         self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
         new_items = list(self.session.game_content.players_by_token[self.player_token].data.inventory.items.values())
         self.assertEqual(1, len(new_items))
@@ -188,7 +189,7 @@ class TestSession(unittest.TestCase):
 
         self.assertEqual([
             '  -- ',
-            ' *..|',
+            ' !..|',
             '  -- '], list(map(lambda x: "".join(x), self.session.dump_players_map(self.player_token))))
 
     def test_wearing_shirt(self):

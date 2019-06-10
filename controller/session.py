@@ -136,7 +136,7 @@ class UnitsInteractor:
     def pick_items(self, player):
         picked_items = list(
             filter(lambda x: x.data.coordinate == player.data.coordinate, self.__game_content.items.values()))
-        self.__game_content.items = {x.id: x for x in
+        self.__game_content.items = {x.data.id: x for x in
                                      filter(lambda x: not x.data.coordinate == player.data.coordinate,
                                             self.__game_content.items.values())}
         for item in picked_items:
