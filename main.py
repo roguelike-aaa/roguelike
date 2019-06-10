@@ -4,8 +4,29 @@ import threading
 from consoleUI.ConsoleUI import ConsoleUI
 from controller.map_controller import MapController
 from shared.command import CommandQueueCreator, LocalQueue, AskMap, SendMap, AskItemsList, SendItemsList, ChangeState, \
-    LoadGame, SaveGame
+    LoadGame, SaveGame, CommandSender, CommandReceiver
 from shared.player_map import PlayerToken, GameSettings
+
+
+def handle_ui_commands(token: PlayerToken, sender: CommandSender, receiver: CommandReceiver, controller: MapController):
+    while True:
+        if not receiver.is_empty():
+            new_command = receiver.pop()
+            if isinstance(new_command, AskMap):
+                sender.put(SendMap(controller.get_player_map(token)))
+                continue
+            if isinstance(new_command, AskItemsList):
+                sender.put(SendItemsList(controller.get_player_items(token)))
+                continue
+            if isinstance(new_command, ChangeState):
+                controller.change_state(new_command.change, token)
+                continue
+            if isinstance(new_command, LoadGame):
+                controller.load_game()
+                continue
+            if isinstance(new_command, SaveGame):
+                controller.save_game()
+                continue
 
 
 def main():
@@ -29,30 +50,12 @@ def main():
             print(c, end='')
         print()
 
-    ui_thread = threading.Thread(target=ui.start)
-    ui_thread.start()
-
     input_commands = ui_commands.get_receiver()
     output_commands = controller_commands.get_sender()
 
-    while True:
-        if not input_commands.is_empty():
-            new_command = input_commands.pop()
-            if isinstance(new_command, AskMap):
-                output_commands.put(SendMap(controller.get_player_map(PlayerToken(args.token))))
-                continue
-            if isinstance(new_command, AskItemsList):
-                output_commands.put(SendItemsList(controller.get_player_items(PlayerToken(args.token))))
-                continue
-            if isinstance(new_command, ChangeState):
-                controller.change_state(new_command.change, token)
-                continue
-            if isinstance(new_command, LoadGame):
-                controller.load_game()
-                continue
-            if isinstance(new_command, SaveGame):
-                controller.save_game()
-                continue
+    controller_thread = threading.Thread(target=handle_ui_commands, args=(token, output_commands, input_commands, controller))
+    controller_thread.start()
+    ui.start()
 
 
 if __name__ == "__main__":
