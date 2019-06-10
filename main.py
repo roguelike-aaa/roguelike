@@ -1,4 +1,5 @@
 import argparse
+import threading
 
 from consoleUI.ConsoleUI import ConsoleUI
 from controller.map_controller import MapController
@@ -28,7 +29,8 @@ def main():
             print(c, end='')
         print()
 
-    ui.start()
+    ui_thread = threading.Thread(target=ui.start)
+    ui_thread.start()
 
     input_commands = ui_commands.get_receiver()
     output_commands = controller_commands.get_sender()

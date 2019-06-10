@@ -86,7 +86,7 @@ class LocalQueue(CommandQueue):
         Pops head element from the queue.
         :return: popped element.
         """
-        self.__queue.get()
+        return self.__queue.get()
 
     def is_empty(self):
         """
@@ -100,6 +100,7 @@ class LocalQueue(CommandQueue):
         Writes element to queue.
         :param element: element to be added to queue.
         """
+
         self.__queue.put(element)
 
 
