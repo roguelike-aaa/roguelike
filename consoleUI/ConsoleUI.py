@@ -1,7 +1,7 @@
 from tcod import tcod
 import time
 
-from shared.command import AskMap, ChangeState, SendMap, SendItemsList, AskItemsList
+from shared.command import AskMap, ChangeState, SendMap, SendItemsList, AskItemsList, SaveGame, LoadGame
 from shared.common import Item, CellType
 from shared.player_map import MoveType, ItemActionType, StateChange, PlayerMove, ItemAction
 
@@ -15,6 +15,9 @@ class ConsoleUI:
         self.__selected_item = 0
 
     def start(self):
+        """
+            Start UI
+        """
         self.__map = self.__get_map_from_controller().map
         screen_width = len(self.__map.map) + 40
         screen_height = len(self.__map.map[0]) + 20
@@ -85,6 +88,10 @@ class ConsoleUI:
                 self.__send_item_action(ItemActionType.REMOVE, self.__items[self.__selected_item - 1])
             if key.c == ord('e') and 0 < self.__selected_item <= len(self.__items):
                 self.__send_item_action(ItemActionType.USE, self.__items[self.__selected_item - 1])
+            if key.c == ord('s'):
+                self.__commandSender.put(SaveGame())
+            if key.c == ord('l'):
+                self.__commandSender.put(LoadGame())
             return None
         else:
             return None
