@@ -145,8 +145,8 @@ class SendItemsList(Command):
         Sending players map in response to AskMap
     """
 
-    def __init__(self, player_map: PlayerMap):
-        self.map = player_map
+    def __init__(self, items):
+        self.items = items
 
 
 class LoadGame(Command):

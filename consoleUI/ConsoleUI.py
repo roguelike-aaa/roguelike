@@ -15,7 +15,7 @@ class ConsoleUI:
         self.__selected_item = 0
 
     def start(self):
-        self.__map = self.__get_map_from_controller()
+        self.__map = self.__get_map_from_controller().map
         screen_width = len(self.__map.map) + 40
         screen_height = len(self.__map.map[0]) + 20
         tcod.console_set_custom_font('arial12x12.png', tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD)
@@ -28,7 +28,6 @@ class ConsoleUI:
         self.__ask_map()
         while self.__commandReceiver.is_empty():
             time.sleep(1)
-            print('1')
         return self.__commandReceiver.pop()
 
     def __ask_map(self):
@@ -38,23 +37,24 @@ class ConsoleUI:
         self.__commandSender.put(AskItemsList())
 
     def __send_move(self, move: MoveType):
-        self.__commandSender.push(ChangeState(StateChange(PlayerMove(move))))
+        self.__commandSender.put(ChangeState(StateChange(PlayerMove(move))))
 
     def __send_item_action(self, action: ItemActionType, item: Item):
-        self.__commandSender.push(ChangeState(StateChange(ItemAction(action, item))))
+        self.__commandSender.put(ChangeState(StateChange(ItemAction(action, item))))
 
     def __make_command(self):
         while not self.__commandReceiver.is_empty():
             command = self.__commandReceiver.pop()
             if command.__class__ == SendMap:
-                self.__ask_map()
+                self.__map = command.map
             elif command.__class__ == SendItemsList:
-                self.__items = command.items
+                self.__items = list(command.items.items.values())
 
     def __lifecicle(self, console):
         while not tcod.console_is_window_closed():
             if not self.__commandReceiver.is_empty():
                 self.__make_command()
+            self.__write_items(console, self.__items, self.__map)
             self.__draw_map(self.__map.map, console)
             self.__draw_hero(self.__map.player.coordinate.x, self.__map.player.coordinate.y, console)
             self.__write_status(console, self.__map)
@@ -79,11 +79,11 @@ class ConsoleUI:
         elif key.vk in range(tcod.KEY_1, tcod.KEY_9 + 1):
             self.__selected_item = key.vk - tcod.KEY_1 + 1
         elif key.vk == tcod.KEY_CHAR:
-            if key.c == ord('Q') and self.__selected_item:
+            if key.c == ord('q') and 0 < self.__selected_item <= len(self.__items):
                 self.__send_item_action(ItemActionType.DROP, self.__items[self.__selected_item - 1])
-            if key.c == ord('W') and self.__selected_item:
+            if key.c == ord('w') and 0 < self.__selected_item <= len(self.__items):
                 self.__send_item_action(ItemActionType.REMOVE, self.__items[self.__selected_item - 1])
-            if key.c == ord('E') and self.__selected_item:
+            if key.c == ord('e') and 0 < self.__selected_item <= len(self.__items):
                 self.__send_item_action(ItemActionType.USE, self.__items[self.__selected_item - 1])
             return None
         else:
@@ -117,19 +117,20 @@ class ConsoleUI:
         for s in status:
             tcod.console_put_char(console, padding, len(map.map) + 12, s, tcod.BKGND_NONE)
             padding += 1
-        for s in str(map.player.fight_stats.current_health):
+        for s in str(map.player.fight_stats.get_health()):
             tcod.console_put_char(console, padding, len(map.map) + 12, s, tcod.BKGND_NONE)
             padding += 1
 
     def __write_items(self, console, items, map):
+        tcod.console_clear(console)
         padding_right = len(map.map) + 10
-        padding_top = 10
+        padding_top = 0
         for ind, item in enumerate(items):
             if ind + 1 == self.__selected_item:
                 self.__write_item(console, item, padding_right, padding_top, True)
             else:
                 self.__write_item(console, item, padding_right, padding_top)
-            padding_top += 10
+            padding_top += 1
 
     @staticmethod
     def __write_item(console, item, padding_right, padding_top, selected=False):
