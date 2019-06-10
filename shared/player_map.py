@@ -49,11 +49,12 @@ class PlayerToken:
 class CurrentFightStats:
     def __init__(self, health, strength):
         self.__current_bonus = Bonus()
+        self.__damage = 0
         self.__base_health = health
         self.__strength = strength
 
     def get_health(self):
-        return self.__base_health + self.__current_bonus.health_bonus if self.__base_health > 0 else 0
+        return max(self.__base_health - self.__damage, 0)
 
     def get_strength(self):
         return self.__strength + self.__current_bonus.strength_bonus
@@ -62,7 +63,7 @@ class CurrentFightStats:
         self.__current_bonus = bonus
 
     def get_damaged(self, damage: int):
-        self.__base_health -= damage
+        self.__damage += max(0, damage - self.__current_bonus.health_bonus)
 
 
 class Player:

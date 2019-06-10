@@ -193,7 +193,7 @@ class TestSession(unittest.TestCase):
 
     def test_wearing_shirt(self):
         item = ItemInitState(Coordinate(1, 3), BodyCloth(Bonus(1, 2), "Foo"))
-        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(2, 1))],
                                self.map,
                                items=[item])
         self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
@@ -205,13 +205,13 @@ class TestSession(unittest.TestCase):
         new_items = list(inventory.items.values())
         self.assertEqual(0, len(new_items))
 
-        self.assertEqual(4, player.data.fight_stats.get_health())
+        self.assertEqual(2, player.data.fight_stats.get_health())
         self.assertEqual(3, player.data.fight_stats.get_strength())
         self.assertEqual(Bonus(1, 2), inventory.active_shirt.bonus)
 
     def test_wearing_helmet(self):
         item = ItemInitState(Coordinate(1, 3), HeadCloth(Bonus(1, 2), "Foo"))
-        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(2, 1))],
                                self.map,
                                items=[item])
         self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
@@ -222,13 +222,13 @@ class TestSession(unittest.TestCase):
         new_items = list(inventory.items.values())
         self.assertEqual(0, len(new_items))
 
-        self.assertEqual(4, player.data.fight_stats.get_health())
+        self.assertEqual(2, player.data.fight_stats.get_health())
         self.assertEqual(3, player.data.fight_stats.get_strength())
         self.assertEqual(Bonus(1, 2), inventory.active_helmet.bonus)
 
     def test_wearing_weapon(self):
         item = ItemInitState(Coordinate(1, 3), Weapon(Bonus(1, 2), "Foo"))
-        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(2, 1))],
                                self.map,
                                items=[item])
         self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
@@ -239,7 +239,7 @@ class TestSession(unittest.TestCase):
         new_items = list(inventory.items.values())
         self.assertEqual(0, len(new_items))
 
-        self.assertEqual(4, player.data.fight_stats.get_health())
+        self.assertEqual(2, player.data.fight_stats.get_health())
         self.assertEqual(3, player.data.fight_stats.get_strength())
         self.assertEqual(Bonus(1, 2), inventory.active_weapon.bonus)
 
@@ -316,7 +316,7 @@ class TestSession(unittest.TestCase):
 
     def test_drinking_potion(self):
         item = ItemInitState(Coordinate(1, 3), Potion(Bonus(1, 2), "Foo"))
-        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(3, 1))],
+        self.session = Session([Player(Coordinate(1, 2), self.player_token, CurrentFightStats(2, 1))],
                                self.map,
                                items=[item])
         self.session.change_player_state(self.player_token, StateChange(PlayerMove(MoveType.RIGHT)))
@@ -328,6 +328,6 @@ class TestSession(unittest.TestCase):
         new_items = list(inventory.items.values())
         self.assertEqual(0, len(new_items))
 
-        self.assertEqual(4, player.data.fight_stats.get_health())
+        self.assertEqual(2, player.data.fight_stats.get_health())
         self.assertEqual(3, player.data.fight_stats.get_strength())
         self.assertEqual(None, inventory.active_weapon)
