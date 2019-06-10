@@ -24,6 +24,10 @@ class Coordinate:
 
 
 class Bonus:
+    """
+        Class representing hero stats bonuses: health bonus and strength bonus.
+    """
+
     def __init__(self, health_bonus=0, strength_bonus=0):
         self.health_bonus = health_bonus
         self.strength_bonus = strength_bonus
@@ -43,6 +47,10 @@ class ItemType(enum.Enum):
 
 
 class Item(ABC):
+    """
+        Class re presenting an item held by a hero to provide him with bonus.
+    """
+
     def __init__(self, bonus: Bonus, name: str):
         self.id = uuid.uuid4()
         self.bonus = bonus
@@ -101,21 +109,44 @@ class CellType(enum.Enum):
 
 from shared.player_map import Inventory
 
+"""
+    Classes describing possible Item types and their properties.
+"""
+
 
 class Usable(Item, ABC):
-    def use(self, inventory: Inventory):
-        raise NotImplementedError()
+    """
+        Item that can be used once after which it will disappear.
+    """
 
 
 class Wearable(Item, ABC):
+    """
+        Item that can be put into player slot (weapon or cloth)
+    """
+
     def wear(self, inventory):
+        """
+        Puts item on hero if required slot is empty.
+        :param inventory: inventory to depict an item on.
+        :return: true if put on successfully, false if required slot was not empty.
+        """
         raise NotImplementedError()
 
     def take_off(self, inventory):
+        """
+        Takes an item off the hero if it matches with the current item. Puts item back to given inventory.
+        :param inventory: place to put item back to.
+        :return: true if taken off successfully, false otherwise.
+        """
         raise NotImplementedError()
 
 
 class Weapon(Wearable):
+    """
+        Wearable item that can be put into the weapon slot
+    """
+
     def wear(self, inventory: Inventory):
         if inventory.active_weapon is not None or self.id not in inventory.items:
             return False
@@ -124,7 +155,7 @@ class Weapon(Wearable):
         return True
 
     def take_off(self, inventory: Inventory):
-        if inventory.active_weapon is not None:
+        if inventory.active_weapon is self:
             inventory.items[self.id] = self
             inventory.active_weapon = None
             return True
@@ -135,19 +166,29 @@ class Weapon(Wearable):
         self.item_type = ItemType.WEAPON
 
 
-class Potion(Item):
+class Potion(Usable):
+    """
+        Usable item.
+    """
+
     def __init__(self, bonus: Bonus, name: str):
         super().__init__(bonus, name)
         self.item_type = ItemType.POTION
 
 
 class Cloth(Wearable, ABC):
+    """
+        Wearable item that can be put into one of the cloth slots
+    """
     def __init__(self, bonus: Bonus, name: str):
         super().__init__(bonus, name)
         self.item_type = ItemType.CLOTH
 
 
 class BodyCloth(Cloth):
+    """
+        Wearable item that can be put into the shirt slot
+    """
     def __init__(self, bonus: Bonus, name: str):
         super().__init__(bonus, name)
 
@@ -159,7 +200,7 @@ class BodyCloth(Cloth):
         return True
 
     def take_off(self, inventory: Inventory):
-        if inventory.active_shirt is not None:
+        if inventory.active_shirt is self:
             inventory.items[self.id] = self
             inventory.active_shirt = None
             return True
@@ -167,6 +208,9 @@ class BodyCloth(Cloth):
 
 
 class HeadCloth(Cloth):
+    """
+        Wearable item that can be put into the helmet slot
+    """
     def __init__(self, bonus: Bonus, name: str):
         super().__init__(bonus, name)
 
@@ -178,7 +222,7 @@ class HeadCloth(Cloth):
         return True
 
     def take_off(self, inventory: Inventory):
-        if inventory.active_helmet is not None:
+        if inventory.active_helmet is self:
             inventory.items[self.id] = self
             inventory.active_helmet = None
             return True

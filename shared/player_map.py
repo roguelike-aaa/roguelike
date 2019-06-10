@@ -16,6 +16,9 @@ class Inventory:
     """
 
     def __init__(self, items=None):
+        """
+        :param items: starting hero items.
+        """
         if items is None:
             items = {}
         self.active_helmet = None
@@ -47,28 +50,49 @@ class PlayerToken:
 
 
 class CurrentFightStats:
+    """
+        Class holding player's current total stats.
+    """
     def __init__(self, health, strength):
+        """
+        :param health: init health.
+        :param strength: init strength
+        """
         self.__current_bonus = Bonus()
         self.__damage = 0
         self.__base_health = health
         self.__strength = strength
 
     def get_health(self):
+        """
+        :return: counts current health based on initial health and damage suffered.
+        """
         return max(self.__base_health - self.__damage, 0)
 
     def get_strength(self):
+        """
+        :return: current strength including bonuses.
+        """
         return self.__strength + self.__current_bonus.strength_bonus
 
     def update_bonus(self, bonus: Bonus):
+        """
+        Replaces current bonus with a new one.
+        :param bonus: new fight bonus.
+        """
         self.__current_bonus = bonus
 
     def get_damaged(self, damage: int):
+        """
+        Reduces health according to the damage dealt with stamina bonus taken into account.
+        :param damage: damage to be dealt to health.
+        """
         self.__damage += max(0, damage - self.__current_bonus.health_bonus)
 
 
 class Player:
     """
-        Class storing player position on the map.
+        Class storing player state on the map.
     """
 
     def __init__(self,
@@ -78,6 +102,7 @@ class Player:
         """
         :param coordinate: position on the map.
         :param player_token: player identifier.
+        :param fight_stats: player fight stats.
         """
         self.coordinate = coordinate
         self.token = player_token
@@ -85,7 +110,15 @@ class Player:
 
 
 class Mob:
+    """
+        Class storing mob state on the map.
+    """
     def __init__(self, coordinate: Coordinate, mob_mode, fight_stats: CurrentFightStats):
+        """
+        :param coordinate: mob coordinate
+        :param mob_mode: mode in which mob operates
+        :param fight_stats: mob fight stats
+        """
         self.coordinate = coordinate
         self.mob_mode = mob_mode
         self.fight_stats = fight_stats
@@ -100,6 +133,7 @@ class PlayerMap:
         """
         :param player_map: 2-dimensional array of characters describing the map layout visible to player.
         :param player: player class defining hero state on the map.
+        :param status_message: game information about last actions happened to player.
         """
         self.status_message = status_message
         self.map = player_map
@@ -143,6 +177,10 @@ class ItemAction(Change):
     """
 
     def __init__(self, action_type: ItemActionType, item: Item):
+        """
+        :param action_type: type of action to be done with item.
+        :param item: item to do action with.
+        """
         self.action_type = action_type
         self.item = item
 

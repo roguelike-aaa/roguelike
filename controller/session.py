@@ -11,6 +11,10 @@ from shared.map_init import ModMode, UnitInitState, MapObjectInitState, ItemInit
 
 
 class Session:
+    """
+        Class storing and controlling single game session.
+    """
+
     def __init__(self, players, game_map, mobs=None, items=None):
         if mobs is None:
             mobs = []
@@ -61,12 +65,11 @@ class Session:
         return status
 
 
-class SinglePlayerSession(Session):
-    def __init__(self, player_token, map_settings, mobs):
-        super().__init__([player_token], map_settings, mobs)
-
-
 class SessionContent:
+    """
+        Class storing game content including players' states, mobs and items.
+    """
+
     def __init__(self, game_map):
         self.players_by_token = {}
         self.players_by_id = {}
@@ -86,6 +89,12 @@ class SessionContent:
 
 
 class UnitsInteractor:
+    """
+        Class providing interface for interaction between player, mobs and items.
+
+        The main intention was to hide the whole information and data controls of the map from
+        units and provide them only with accessible information.
+    """
     def __init__(self, game_content: SessionContent):
         self.__game_content = game_content
 
@@ -125,14 +134,19 @@ class UnitsInteractor:
         return False
 
     def pick_items(self, player):
-        picked_items = list(filter(lambda x: x.data.coordinate == player.data.coordinate, self.__game_content.items.values()))
+        picked_items = list(
+            filter(lambda x: x.data.coordinate == player.data.coordinate, self.__game_content.items.values()))
         self.__game_content.items = {x.id: x for x in
-            filter(lambda x: not x.data.coordinate == player.data.coordinate, self.__game_content.items.values())}
+                                     filter(lambda x: not x.data.coordinate == player.data.coordinate,
+                                            self.__game_content.items.values())}
         for item in picked_items:
             player.inventory_controller.add_item(item.data.item)
 
 
 class MapObjectState(ABC):
+    """
+        Class storing a map object location.
+    """
     class MapObjectData:
         def __init__(self, obj: MapObjectInitState):
             self.id = uuid.uuid4()
@@ -140,6 +154,9 @@ class MapObjectState(ABC):
 
 
 class UnitState(MapObjectState):
+    """
+        Class storing unit information and providing unit actions such as move or attack.
+    """
     class UnitType(enum.Enum):
         UNKNOWN = enum.auto()
         MOB = enum.auto()
@@ -214,6 +231,9 @@ class UnitState(MapObjectState):
 
 
 class InventoryController:
+    """
+        Class providing basic actions with player's inventory.
+    """
     def __init__(self, inventory: Inventory):
         self.inventory = inventory
         self.active_bonuses = {}
@@ -251,6 +271,9 @@ class InventoryController:
 
 
 class PlayerState(UnitState):
+    """
+        Class providing player-specific unit actions as item/inventory interactions and state updates.
+    """
     class PlayerData(UnitState.UnitData):
         def __init__(self, game_map, player: PlayerInitState):
             super().__init__(game_map, player)
@@ -297,6 +320,9 @@ class PlayerState(UnitState):
 
 
 class MobState(UnitState):
+    """
+        Class for automated unit holding its action course.
+    """
     def __init__(self, game_map, mob, game_interactor):
         super().__init__(game_map, mob, game_interactor)
         self.data.unit_type = UnitState.UnitType.MOB
@@ -314,6 +340,9 @@ class MobState(UnitState):
 
 
 class ItemState(MapObjectState):
+    """
+        State of the item lying on a map.
+    """
     class ItemData(MapObjectState.MapObjectData):
         def __init__(self, item: ItemInitState):
             super().__init__(item)
@@ -324,6 +353,9 @@ class ItemState(MapObjectState):
 
 
 class MapView:
+    """
+        Class restricting seen information to position/id metadata.
+    """
     class MapObjectView:
         def __init__(self, id, coordinate: Coordinate):
             self.id = id
@@ -340,7 +372,10 @@ class MapView:
         self.player_views = players
 
 
-class MobStrategy:
+class MobStrategy(ABC):
+    """
+        Abstract class for mob strategy among all the actions choosing the one with the maximum weight.
+    """
     @classmethod
     def act(cls, mob, context):
         direction = None
@@ -363,6 +398,9 @@ class MobStrategy:
 
 
 class PlayersDistanceBasedMobStrategy(MobStrategy, ABC):
+    """
+        Abstract class for wighted mob strategy that depends on the distace from players.
+    """
     @classmethod
     def dist_weight(cls, state_change, mob, context):
         if not context.player_views:
@@ -378,6 +416,9 @@ class PlayersDistanceBasedMobStrategy(MobStrategy, ABC):
 
 
 class AggressiveStrategy(PlayersDistanceBasedMobStrategy):
+    """
+        Mob strategy that chases the nearest visible player.
+    """
     @classmethod
     def action_weight(cls, state_change, mob, context):
         weight = super().dist_weight(state_change, mob, context)
@@ -385,6 +426,9 @@ class AggressiveStrategy(PlayersDistanceBasedMobStrategy):
 
 
 class PassiveStrategy(MobStrategy):
+    """
+        Mob strategy that does nothing.
+    """
     @classmethod
     def action_weight(cls, state_change, mob, context):
         # Does nothing
@@ -392,12 +436,18 @@ class PassiveStrategy(MobStrategy):
 
 
 class FrightenedStrategy(PlayersDistanceBasedMobStrategy):
+    """
+        Mob strategy that hides from the nearest visible player.
+    """
     @classmethod
     def action_weight(cls, state_change, mob, context):
         return super().dist_weight(state_change, mob, context)
 
 
 class ConfusedStrategy(MobStrategy):
+    """
+        Mob strategy that goes in a random direction.
+    """
     def __init__(self, strategy):
         if strategy is ConfusedStrategy:
             strategy = strategy.strategy
@@ -410,6 +460,9 @@ class ConfusedStrategy(MobStrategy):
 
 
 class DeadPlayer(PlayerState):
+    """
+        Decorator for the player whose health is 0.
+    """
     def __init__(self, player_state: PlayerState):
         self.mask = None
         self.token = player_state.token

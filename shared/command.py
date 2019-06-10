@@ -5,6 +5,10 @@ from shared.player_map import StateChange, PlayerMap
 
 
 class CommandQueue:
+    """
+       Queue for exchanging Commands.
+    """
+
     def is_empty(self):
         pass
 
@@ -16,25 +20,49 @@ class CommandQueue:
 
 
 class CommandSender:
+    """
+        CommandQueue interface allowing only writing to queue.
+    """
+
     def __init__(self, queue: CommandQueue):
         self.__queue = queue
 
     def put(self, element):
+        """
+        Writes element to queue.
+        :param element: element to be added to queue.
+        """
         self.__queue.put(element)
 
 
 class CommandReceiver:
+    """
+        CommandQueue interface allowing only reading from queue.
+    """
+
     def __init__(self, queue: CommandQueue):
         self.__queue = queue
 
     def is_empty(self):
+        """
+        Checks if queue is empty
+        :return: true if it is, false otherwise.
+        """
         return self.__queue.is_empty()
 
     def pop(self):
+        """
+        Pops head element from the queue.
+        :return: popped element.
+        """
         return self.__queue.pop()
 
 
 class CommandQueueCreator:
+    """
+        Class creating sender and receiver interfaces from given queue.
+    """
+
     def __init__(self, queue: CommandQueue):
         self.__queue = queue
 
@@ -46,16 +74,32 @@ class CommandQueueCreator:
 
 
 class LocalQueue(CommandQueue):
+    """
+        CommandQueue implementation based on the python queue. Enough for local communication.
+    """
+
     def __init__(self):
         self.__queue = queue.Queue()
 
     def pop(self):
+        """
+        Pops head element from the queue.
+        :return: popped element.
+        """
         self.__queue.get()
 
     def is_empty(self):
+        """
+        Checks if queue is empty
+        :return: true if it is, false otherwise.
+        """
         return self.__queue.empty()
 
     def put(self, element):
+        """
+        Writes element to queue.
+        :param element: element to be added to queue.
+        """
         self.__queue.put(element)
 
 
