@@ -1,7 +1,7 @@
 from tcod import tcod
 import time
 
-from shared.command import AskMap, ChangeState
+from shared.command import AskMap, ChangeState, SendMap, SendItemsList, AskItemsList
 from shared.common import Item, CellType
 from shared.player_map import MoveType, ItemActionType, StateChange, PlayerMove, ItemAction
 
@@ -14,10 +14,10 @@ class ConsoleUI:
         self.__items = []
         self.__selected_item = 0
 
-    def start(self, map):
+    def start(self):
         self.__map = self.__get_map_from_controller()
-        screen_width = len(map.map) + 40
-        screen_height = len(map.map[0]) + 20
+        screen_width = len(self.__map.map) + 40
+        screen_height = len(self.__map.map[0]) + 20
         tcod.console_set_custom_font('arial12x12.png', tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD)
         console = tcod.console_init_root(screen_width, screen_height, 'Roguelike AAA', False)
         tcod.sys_set_fps(5)
@@ -25,12 +25,17 @@ class ConsoleUI:
         self.__lifecicle(console)
 
     def __get_map_from_controller(self):
+        self.__ask_map()
         while self.__commandReceiver.is_empty():
             time.sleep(1)
+            print('1')
         return self.__commandReceiver.pop()
 
     def __ask_map(self):
-        self.__commandSender.push(AskMap())
+        self.__commandSender.put(AskMap())
+
+    def __ask_items(self):
+        self.__commandSender.put(AskItemsList())
 
     def __send_move(self, move: MoveType):
         self.__commandSender.push(ChangeState(StateChange(PlayerMove(move))))
@@ -39,7 +44,12 @@ class ConsoleUI:
         self.__commandSender.push(ChangeState(StateChange(ItemAction(action, item))))
 
     def __make_command(self):
-        pass
+        while not self.__commandReceiver.is_empty():
+            command = self.__commandReceiver.pop()
+            if command.__class__ == SendMap:
+                self.__ask_map()
+            elif command.__class__ == SendItemsList:
+                self.__items = command.items
 
     def __lifecicle(self, console):
         while not tcod.console_is_window_closed():
@@ -54,6 +64,8 @@ class ConsoleUI:
             action = self.__handle_keys(key)
             if action is not None:
                 self.__send_move(action)
+            self.__ask_map()
+            self.__ask_items()
 
     def __handle_keys(self, key):
         if key.vk == tcod.KEY_UP:
@@ -73,6 +85,7 @@ class ConsoleUI:
                 self.__send_item_action(ItemActionType.REMOVE, self.__items[self.__selected_item - 1])
             if key.c == ord('E') and self.__selected_item:
                 self.__send_item_action(ItemActionType.USE, self.__items[self.__selected_item - 1])
+            return None
         else:
             return None
 
