@@ -1,4 +1,4 @@
-from tcod import tcod
+# from tcod import tcod
 import time
 
 from shared.command import AskMap, ChangeState, SendMap, SendItemsList, AskItemsList
