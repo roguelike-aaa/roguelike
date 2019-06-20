@@ -45,10 +45,6 @@ def main():
     controller = MapController(token, GameSettings(args.height, args.width))
 
     ui = ConsoleUI(controller_commands.get_receiver(), ui_commands.get_sender())
-    for line in controller.get_player_map(PlayerToken(args.token)).map:
-        for c in line:
-            print(c, end='')
-        print()
 
     input_commands = ui_commands.get_receiver()
     output_commands = controller_commands.get_sender()
