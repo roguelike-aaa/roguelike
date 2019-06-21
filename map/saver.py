@@ -14,14 +14,14 @@ class MapSaver:
         Saves session.
     """
     def save(self, session):
-        with open(self.filename, "w") as file:
+        with open(self.filename, "wb") as file:
             pickle.dump(session, file)
 
     """
         Loads previous session from file.
     """
     def load(self):
-        with open(self.filename, "r") as file:
+        with open(self.filename, "rb") as file:
             result = pickle.load(file)
         return result
 

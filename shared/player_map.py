@@ -147,21 +147,21 @@ class MoveType(enum.Enum):
     """
         Types of the moves that hero may make.
     """
-    LEFT = enum.auto()
-    RIGHT = enum.auto()
-    UP = enum.auto()
-    DOWN = enum.auto()
-    NO = enum.auto()
+    LEFT = 1
+    RIGHT = 2
+    UP = 3
+    DOWN = 4
+    NO = 0
 
 
 class ItemActionType(enum.Enum):
     """
         Types of items actions
     """
-    DROP = enum.auto()
-    USE = enum.auto()
-    WEAR = enum.auto()
-    REMOVE_FROM_SLOT = enum.auto()
+    DROP = 1
+    USE = 2
+    WEAR = 3
+    REMOVE_FROM_SLOT = 4
 
 
 class Change(ABC):

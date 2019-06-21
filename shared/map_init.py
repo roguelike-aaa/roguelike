@@ -85,9 +85,9 @@ class PlayerInitState(UnitInitState):
 
 
 class ModMode(enum.Enum):
-    FRIGHTENED = enum.auto()
-    AGGRESSIVE = enum.auto()
-    PASSIVE = enum.auto()
+    FRIGHTENED = 1
+    AGGRESSIVE = 2
+    PASSIVE = 3
 
 
 class MobInitState(UnitInitState):

@@ -40,10 +40,10 @@ class Bonus:
 
 
 class ItemType(enum.Enum):
-    UNKNOWN = enum.auto(),
-    WEAPON = enum.auto(),
-    POTION = enum.auto(),
-    CLOTH = enum.auto(),
+    UNKNOWN = 0,
+    WEAPON = 1,
+    POTION = 2,
+    CLOTH = 3,
 
 
 class Item(ABC):
